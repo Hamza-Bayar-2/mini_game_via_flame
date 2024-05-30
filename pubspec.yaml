@@ -62,6 +62,7 @@ flutter:
 
   # To add assets to your application, add an assets section, like this:
   assets:
+    - assets/images/
     - assets/images/Archer/Character/
     - assets/images/Archer/Arrow/
     - assets/images/Sword Man/
@@ -69,6 +70,7 @@ flutter:
     - assets/images/Enemies/Goblin/
     - assets/images/Enemies/Mushroom/
     - assets/images/Enemies/Skeleton/
+    - assets/audio/running.mp3
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/assets-and-images/#resolution-aware

@@ -1,20 +1,20 @@
 import 'dart:async';
 import 'package:flame/components.dart';
 import 'package:flame/events.dart';
-import 'package:flutter/cupertino.dart';
-import 'package:flutter/src/services/keyboard_key.g.dart';
+import 'package:flame_audio/flame_audio.dart';
 import 'package:flutter/src/services/raw_keyboard.dart';
+import 'package:mini_game_via_flame/flame_layer/mini_game.dart';
 
 enum ArcherState {attack, death, fall, getHit, idle, jump, run}
 enum ArcherDirection {up, down, left, right, upRight, upLeft, downRight, downLeft, none}
 
-class ArcherPlayer extends SpriteAnimationGroupComponent with HasGameRef, KeyboardHandler, TapCallbacks{
+class ArcherPlayer extends SpriteAnimationGroupComponent with HasGameRef, KeyboardHandler, TapCallbacks, DragCallbacks{
   ArcherPlayer() : super(position: Vector2(100, 200), size: Vector2.all(200));
   ArcherDirection archerDirection = ArcherDirection.none;
   double speed = 250;
   Vector2 velocity = Vector2.zero();
   bool isFacingRight = true;
-  bool isTapedDown = false;
+  
 
   @override
   Future<void> onLoad() async {
@@ -24,7 +24,11 @@ class ArcherPlayer extends SpriteAnimationGroupComponent with HasGameRef, Keyboa
 
   @override
   void update(double dt) {
-    _archerMovement(dt);
+    if(isTapingDown){
+      current = ArcherState.attack;
+    } else {
+      _archerMovement(dt);
+    }
     super.update(dt);
   }
 
@@ -39,7 +43,6 @@ class ArcherPlayer extends SpriteAnimationGroupComponent with HasGameRef, Keyboa
     final isLeftKeyPressed = keysPressed.contains(LogicalKeyboardKey.arrowLeft) || 
     keysPressed.contains(LogicalKeyboardKey.keyA);
 
-
     _keyBoardDirectionHandler(
       isUpKeyPressed, 
       isDownKeyPressed, 
@@ -48,12 +51,6 @@ class ArcherPlayer extends SpriteAnimationGroupComponent with HasGameRef, Keyboa
     );
 
     return super.onKeyEvent(event, keysPressed);
-  }
-
-  @override
-  void onTapDown(TapDownEvent event) {
-    isTapedDown = true;
-    super.onTapDown(event);
   }
 
   // this method make the archer move according to the keys that pressed
@@ -86,22 +83,21 @@ class ArcherPlayer extends SpriteAnimationGroupComponent with HasGameRef, Keyboa
     } else if(isLeftKeyPressed){
       archerDirection = ArcherDirection.left;
     } 
-    else {
+    else{
       archerDirection = ArcherDirection.none;
-    }
-
-
+    } 
   }
 
   // this helps us to manage all the animation that belongs to the archer
   void _loadAnimation() {
-    final attackAnimation = _spriteAnimation("Attack", 6);
-    final deathAnimation = _spriteAnimation("Death", 10);
-    final fallAnimation = _spriteAnimation("Fall", 2);
-    final getHitAnimation = _spriteAnimation("Get Hit", 3);
-    final idleAnimation = _spriteAnimation("Idle", 10);
-    final jumpAnimation = _spriteAnimation("Jump", 2);
-    final runAnimation = _spriteAnimation("Run", 8);
+    double time = 0.07;
+    final attackAnimation = _spriteAnimation(archerState: "Attack", frameAmount: 6, stepTime: 0.12);
+    final deathAnimation = _spriteAnimation(archerState: "Death", frameAmount: 10, stepTime: time);
+    final fallAnimation = _spriteAnimation(archerState: "Fall", frameAmount: 2, stepTime: time);
+    final getHitAnimation = _spriteAnimation(archerState: "Get Hit", frameAmount: 3, stepTime: time);
+    final idleAnimation = _spriteAnimation(archerState: "Idle", frameAmount: 10, stepTime: time);
+    final jumpAnimation = _spriteAnimation(archerState: "Jump", frameAmount: 2, stepTime: time);
+    final runAnimation = _spriteAnimation(archerState: "Run", frameAmount: 8, stepTime: time);
 
     animations = {
       ArcherState.attack: attackAnimation,
@@ -185,16 +181,15 @@ class ArcherPlayer extends SpriteAnimationGroupComponent with HasGameRef, Keyboa
  
   // this method is used to prevent repeating the same code
   // An animation is created by giving the name of the file and the number of the frames in the sheet
-  SpriteAnimation _spriteAnimation(String archerState, int frameAmount) {
+  SpriteAnimation _spriteAnimation({required String archerState, required int frameAmount, required double stepTime}) {
     return SpriteAnimation.fromFrameData(
       gameRef.images.fromCache("Archer/Character/$archerState.png"),
       SpriteAnimationData.sequenced(
         amount: frameAmount,
-        stepTime: 0.07,
+        stepTime: stepTime,
         textureSize: Vector2.all(100),
       ),
     );
   }
   
-
 }
