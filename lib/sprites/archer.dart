@@ -86,9 +86,9 @@ class ArcherPlayer extends SpriteAnimationGroupComponent with HasGameRef, Keyboa
     } else if(isLeftKeyPressed){
       archerDirection = ArcherDirection.left;
     } 
-    // else {
-    //   archerDirection = ArcherDirection.none;
-    // }
+    else {
+      archerDirection = ArcherDirection.none;
+    }
 
 
   }
