@@ -8,7 +8,7 @@ import 'package:mini_game_via_flame/flame_layer/mini_game.dart';
 enum ArcherState {attack, death, fall, getHit, idle, jump, run}
 enum ArcherDirection {up, down, left, right, upRight, upLeft, downRight, downLeft, none}
 
-class ArcherPlayer extends SpriteAnimationGroupComponent with HasGameRef, KeyboardHandler, TapCallbacks, DragCallbacks{
+class ArcherPlayer extends SpriteAnimationGroupComponent with HasGameRef<MiniGame>, KeyboardHandler, TapCallbacks, DragCallbacks{
   ArcherPlayer() : super(position: Vector2(100, 200), size: Vector2.all(200));
   ArcherDirection archerDirection = ArcherDirection.none;
   double speed = 250;
@@ -24,7 +24,9 @@ class ArcherPlayer extends SpriteAnimationGroupComponent with HasGameRef, Keyboa
 
   @override
   void update(double dt) {
-    if(isTapingDown){
+    // by reaching to MiniGame class I used the tapingDownBloc instence that I created there
+    // so that I could read the isTapingDown boolean variable
+    if(gameRef.tapingDownBloc.state.isTapingDown){
       current = ArcherState.attack;
     } else {
       _archerMovement(dt);

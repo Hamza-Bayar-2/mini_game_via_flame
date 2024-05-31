@@ -1,5 +1,7 @@
 import 'package:flame/flame.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:mini_game_via_flame/blocs/taping_down/taping_down_bloc.dart';
 import 'package:mini_game_via_flame/flame_layer/flame_layer.dart';
 import 'package:mini_game_via_flame/flutter_layer/flutter_layer.dart';
 
@@ -16,14 +18,16 @@ class MiniGameApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      theme: ThemeData(textTheme: const TextTheme(bodyMedium: TextStyle(color: Colors.blue, fontSize: 20))),
+      theme: ThemeData(
+          textTheme: const TextTheme(
+              bodyMedium: TextStyle(color: Colors.blue, fontSize: 20))),
       debugShowCheckedModeBanner: true,
-      home: const Scaffold(
-        body: Stack(
-          children: [
-            FlameLayer(),
-            FlutterLayer()
-          ],
+      home: BlocProvider<TapingDownBloc>(
+        create: (context) => TapingDownBloc(),
+        child: const Scaffold(
+          body: Stack(
+            children: [FlameLayer(), FlutterLayer()],
+          ),
         ),
       ),
     );
