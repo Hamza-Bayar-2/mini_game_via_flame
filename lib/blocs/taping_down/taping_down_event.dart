@@ -7,6 +7,14 @@ abstract class TapingDownEvent extends Equatable {
   List<Object> get props => [];
 }
 
-class TapingDown extends TapingDownEvent {}
+class TapingEvent extends TapingDownEvent {}
 
-class NotTapingDown extends TapingDownEvent {}
+class NotTapingEvent extends TapingDownEvent {}
+
+class DecreaseHealthEvent extends TapingDownEvent {}
+
+class ResetHealthEvent extends TapingDownEvent {}
+
+class FaceRightEvent extends TapingDownEvent {}
+
+class FaceLeftEvent extends TapingDownEvent {}

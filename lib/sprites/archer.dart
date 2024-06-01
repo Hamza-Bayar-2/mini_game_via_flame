@@ -1,19 +1,25 @@
 import 'dart:async';
+import 'dart:math';
 import 'package:flame/components.dart';
 import 'package:flame/events.dart';
-import 'package:flame_audio/flame_audio.dart';
+import 'package:flame/sprite.dart';
 import 'package:flutter/src/services/raw_keyboard.dart';
+import 'package:mini_game_via_flame/blocs/taping_down/taping_down_bloc.dart';
 import 'package:mini_game_via_flame/flame_layer/mini_game.dart';
 
-enum ArcherState {attack, death, fall, getHit, idle, jump, run}
+enum ArcherState {attack, death, fall, getHit, idle, jump, run, deathStatic}
 enum ArcherDirection {up, down, left, right, upRight, upLeft, downRight, downLeft, none}
 
 class ArcherPlayer extends SpriteAnimationGroupComponent with HasGameRef<MiniGame>, KeyboardHandler, TapCallbacks, DragCallbacks{
-  ArcherPlayer() : super(position: Vector2(100, 200), size: Vector2.all(200));
+  ArcherPlayer() : super(position: Vector2.all(500), size: Vector2.all(200), anchor: Anchor.centerRight);
   ArcherDirection archerDirection = ArcherDirection.none;
   double speed = 250;
+  // When the player runs diagonally, this value will be used
+  // 250*250 = x*x + x*x, x = hypotenuseSpeed
+  late double hypotenuseSpeed = sqrt(speed*speed/2);
   Vector2 velocity = Vector2.zero();
-  bool isFacingRight = true;
+  bool isArcherDead = false;
+  final countdown = Timer(0.7);
   
 
   @override
@@ -26,9 +32,21 @@ class ArcherPlayer extends SpriteAnimationGroupComponent with HasGameRef<MiniGam
   void update(double dt) {
     // by reaching to MiniGame class I used the tapingDownBloc instence that I created there
     // so that I could read the isTapingDown boolean variable
-    if(gameRef.tapingDownBloc.state.isTapingDown){
+    if(gameRef.tapingDownBloc.state.archerHelth <= 0) {
+      countdown.resume();
+      countdown.update(dt);
+        // untel the time is up the current state will be the death state
+        // when the time is up the current state will be the deathStatic state
+        if(countdown.finished){
+          current = ArcherState.deathStatic;
+        } else {
+          current = ArcherState.death;
+        }
+    } else if(gameRef.tapingDownBloc.state.isTapingDown){
+      countdown.stop();
       current = ArcherState.attack;
     } else {
+      countdown.stop();
       _archerMovement(dt);
     }
     super.update(dt);
@@ -100,6 +118,7 @@ class ArcherPlayer extends SpriteAnimationGroupComponent with HasGameRef<MiniGam
     final idleAnimation = _spriteAnimation(archerState: "Idle", frameAmount: 10, stepTime: time);
     final jumpAnimation = _spriteAnimation(archerState: "Jump", frameAmount: 2, stepTime: time);
     final runAnimation = _spriteAnimation(archerState: "Run", frameAmount: 8, stepTime: time);
+    final lastFrameDeath = _spriteAnimation(archerState: "DeathStatic", frameAmount: 1, stepTime: 10);
 
     animations = {
       ArcherState.attack: attackAnimation,
@@ -108,7 +127,8 @@ class ArcherPlayer extends SpriteAnimationGroupComponent with HasGameRef<MiniGam
       ArcherState.getHit: getHitAnimation,
       ArcherState.idle: idleAnimation,
       ArcherState.jump: jumpAnimation,
-      ArcherState.run: runAnimation
+      ArcherState.run: runAnimation,
+      ArcherState.deathStatic: lastFrameDeath
     };
   }
 
@@ -123,54 +143,54 @@ class ArcherPlayer extends SpriteAnimationGroupComponent with HasGameRef<MiniGam
       current = ArcherState.run;
       directionY += speed;
     } else if (archerDirection == ArcherDirection.right) {
-      if (!isFacingRight) {
+      if (!gameRef.tapingDownBloc.state.isPlayerFacingRight) {
         flipHorizontallyAroundCenter();
-        isFacingRight = true;
+        gameRef.tapingDownBloc.add(FaceRightEvent());
       }
       current = ArcherState.run;
       directionX += speed;
     } else if (archerDirection == ArcherDirection.left) {
-      if (isFacingRight) {
+      if (gameRef.tapingDownBloc.state.isPlayerFacingRight) {
         flipHorizontallyAroundCenter();
-        isFacingRight = false;
+        gameRef.tapingDownBloc.add(FaceLeftEvent());
       }
       current = ArcherState.run;
       directionX -= speed;
     } else if(archerDirection == ArcherDirection.upRight){
-      if (!isFacingRight) {
+      if (!gameRef.tapingDownBloc.state.isPlayerFacingRight) {
         flipHorizontallyAroundCenter();
-        isFacingRight = true;
+        gameRef.tapingDownBloc.add(FaceRightEvent());
       }
       current = ArcherState.run;
-      directionY -= speed;
-      directionX += speed;
+      directionY -= hypotenuseSpeed;
+      directionX += hypotenuseSpeed;
     }
      else if(archerDirection == ArcherDirection.upLeft){
-      if (isFacingRight) {
+      if (gameRef.tapingDownBloc.state.isPlayerFacingRight) {
         flipHorizontallyAroundCenter();
-        isFacingRight = false;
+        gameRef.tapingDownBloc.add(FaceLeftEvent());
       }
       current = ArcherState.run;
-      directionY -= speed;
-      directionX -= speed;
+      directionY -= hypotenuseSpeed;
+      directionX -= hypotenuseSpeed;
     }
      else if(archerDirection == ArcherDirection.downRight){
-      if (!isFacingRight) {
+      if (!gameRef.tapingDownBloc.state.isPlayerFacingRight) {
         flipHorizontallyAroundCenter();
-        isFacingRight = true;
+        gameRef.tapingDownBloc.add(FaceRightEvent());
       }
       current = ArcherState.run;
-      directionX += speed;
-      directionY += speed;
+      directionX += hypotenuseSpeed;
+      directionY += hypotenuseSpeed;
     }
      else if(archerDirection == ArcherDirection.downLeft){
-      if (isFacingRight) {
+      if (gameRef.tapingDownBloc.state.isPlayerFacingRight) {
         flipHorizontallyAroundCenter();
-        isFacingRight = false;
+        gameRef.tapingDownBloc.add(FaceLeftEvent());
       }
       current = ArcherState.run;
-      directionX -= speed;
-      directionY += speed;
+      directionX -= hypotenuseSpeed;
+      directionY += hypotenuseSpeed;
     } else if (archerDirection == ArcherDirection.none) {
       current = ArcherState.idle;
     } else {
@@ -179,6 +199,16 @@ class ArcherPlayer extends SpriteAnimationGroupComponent with HasGameRef<MiniGam
 
     velocity = Vector2(directionX, directionY);
     position += velocity * dt;
+
+    // this "if" condition keeps the archer insead the screen
+    if(position.x <= 0)
+      position.x = 0;
+    if(position.x >= gameRef.size.x)
+      position.x = gameRef.size.x;
+    if(position.y <= 0)
+      position.y = 0;
+    if(position.y >= gameRef.size.y)
+      position.y = gameRef.size.y;   
   }
  
   // this method is used to prevent repeating the same code

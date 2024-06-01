@@ -20,7 +20,13 @@ class MiniGameApp extends StatelessWidget {
     return MaterialApp(
       theme: ThemeData(
           textTheme: const TextTheme(
-              bodyMedium: TextStyle(color: Colors.blue, fontSize: 20))),
+              bodyMedium: TextStyle(color: Colors.blue, fontSize: 30)),
+              textButtonTheme: TextButtonThemeData(style: TextButton.styleFrom(
+                backgroundColor: Colors.blueAccent,
+                foregroundColor: Colors.white,
+                textStyle: const TextStyle(fontSize: 30,),
+              ))
+              ),
       debugShowCheckedModeBanner: true,
       home: BlocProvider<TapingDownBloc>(
         create: (context) => TapingDownBloc(),
