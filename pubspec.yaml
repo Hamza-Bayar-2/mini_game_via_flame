@@ -70,7 +70,7 @@ flutter:
     - assets/images/Enemies/Goblin/
     - assets/images/Enemies/Mushroom/
     - assets/images/Enemies/Skeleton/
-    - assets/audio/running.mp3
+    - assets/audio/
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/assets-and-images/#resolution-aware

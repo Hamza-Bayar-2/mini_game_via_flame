@@ -1,7 +1,7 @@
 import 'package:flame/flame.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:mini_game_via_flame/blocs/taping_down/taping_down_bloc.dart';
+import 'package:mini_game_via_flame/blocs/mini_game/mini_game_bloc.dart';
 import 'package:mini_game_via_flame/flame_layer/flame_layer.dart';
 import 'package:mini_game_via_flame/flutter_layer/flutter_layer.dart';
 
@@ -28,8 +28,8 @@ class MiniGameApp extends StatelessWidget {
               ))
               ),
       debugShowCheckedModeBanner: true,
-      home: BlocProvider<TapingDownBloc>(
-        create: (context) => TapingDownBloc(),
+      home: BlocProvider<MiniGameBloc>(
+        create: (context) => MiniGameBloc(),
         child: const Scaffold(
           body: Stack(
             children: [FlameLayer(), FlutterLayer()],

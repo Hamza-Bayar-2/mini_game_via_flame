@@ -2,9 +2,10 @@ import 'dart:async';
 import 'dart:math';
 import 'package:flame/components.dart';
 import 'package:flame/events.dart';
-import 'package:flame/sprite.dart';
+import 'package:flame_audio/bgm.dart';
+import 'package:flame_audio/flame_audio.dart';
 import 'package:flutter/src/services/raw_keyboard.dart';
-import 'package:mini_game_via_flame/blocs/taping_down/taping_down_bloc.dart';
+import 'package:mini_game_via_flame/blocs/mini_game/mini_game_bloc.dart';
 import 'package:mini_game_via_flame/flame_layer/mini_game.dart';
 
 enum ArcherState {attack, death, fall, getHit, idle, jump, run, deathStatic}
@@ -18,9 +19,11 @@ class ArcherPlayer extends SpriteAnimationGroupComponent with HasGameRef<MiniGam
   // 250*250 = x*x + x*x, x = hypotenuseSpeed
   late double hypotenuseSpeed = sqrt(speed*speed/2);
   Vector2 velocity = Vector2.zero();
-  bool isArcherDead = false;
+  // this timer is used for the archer death animation
   final countdown = Timer(0.7);
-  
+  bool isDeathAudioPlayed = false;
+  bool isArcherRunning = false;
+  late Bgm runSoundBmg = FlameAudio.bgmFactory(audioCache: FlameAudio.audioCache);
 
   @override
   Future<void> onLoad() async {
@@ -29,25 +32,22 @@ class ArcherPlayer extends SpriteAnimationGroupComponent with HasGameRef<MiniGam
   }
 
   @override
-  void update(double dt) {
-    // by reaching to MiniGame class I used the tapingDownBloc instence that I created there
-    // so that I could read the isTapingDown boolean variable
-    if(gameRef.tapingDownBloc.state.archerHelth <= 0) {
-      countdown.resume();
-      countdown.update(dt);
-        // untel the time is up the current state will be the death state
-        // when the time is up the current state will be the deathStatic state
-        if(countdown.finished){
-          current = ArcherState.deathStatic;
-        } else {
-          current = ArcherState.death;
-        }
-    } else if(gameRef.tapingDownBloc.state.isTapingDown){
+  Future<void> update(double dt) async {
+    // by reaching to MiniGame class, I ma usign the miniGameBloc instence that I created there
+    // so I could read the isTapingDown boolean variable
+    if(gameRef.miniGameBloc.state.isArcherDead) {
+      _killArcher(dt);
+      isArcherRunning = false;
+      runSoundBmg.stop();
+    } else if(gameRef.miniGameBloc.state.isTapingDown){
       countdown.stop();
       current = ArcherState.attack;
+      isArcherRunning = false;
+      runSoundBmg.stop();
     } else {
       countdown.stop();
       _archerMovement(dt);
+      _archerRunningSound();
     }
     super.update(dt);
   }
@@ -143,50 +143,50 @@ class ArcherPlayer extends SpriteAnimationGroupComponent with HasGameRef<MiniGam
       current = ArcherState.run;
       directionY += speed;
     } else if (archerDirection == ArcherDirection.right) {
-      if (!gameRef.tapingDownBloc.state.isPlayerFacingRight) {
+      if (!gameRef.miniGameBloc.state.isPlayerFacingRight) {
         flipHorizontallyAroundCenter();
-        gameRef.tapingDownBloc.add(FaceRightEvent());
+        gameRef.miniGameBloc.add(FaceRightEvent());
       }
       current = ArcherState.run;
       directionX += speed;
     } else if (archerDirection == ArcherDirection.left) {
-      if (gameRef.tapingDownBloc.state.isPlayerFacingRight) {
+      if (gameRef.miniGameBloc.state.isPlayerFacingRight) {
         flipHorizontallyAroundCenter();
-        gameRef.tapingDownBloc.add(FaceLeftEvent());
+        gameRef.miniGameBloc.add(FaceLeftEvent());
       }
       current = ArcherState.run;
       directionX -= speed;
     } else if(archerDirection == ArcherDirection.upRight){
-      if (!gameRef.tapingDownBloc.state.isPlayerFacingRight) {
+      if (!gameRef.miniGameBloc.state.isPlayerFacingRight) {
         flipHorizontallyAroundCenter();
-        gameRef.tapingDownBloc.add(FaceRightEvent());
+        gameRef.miniGameBloc.add(FaceRightEvent());
       }
       current = ArcherState.run;
       directionY -= hypotenuseSpeed;
       directionX += hypotenuseSpeed;
     }
      else if(archerDirection == ArcherDirection.upLeft){
-      if (gameRef.tapingDownBloc.state.isPlayerFacingRight) {
+      if (gameRef.miniGameBloc.state.isPlayerFacingRight) {
         flipHorizontallyAroundCenter();
-        gameRef.tapingDownBloc.add(FaceLeftEvent());
+        gameRef.miniGameBloc.add(FaceLeftEvent());
       }
       current = ArcherState.run;
       directionY -= hypotenuseSpeed;
       directionX -= hypotenuseSpeed;
     }
      else if(archerDirection == ArcherDirection.downRight){
-      if (!gameRef.tapingDownBloc.state.isPlayerFacingRight) {
+      if (!gameRef.miniGameBloc.state.isPlayerFacingRight) {
         flipHorizontallyAroundCenter();
-        gameRef.tapingDownBloc.add(FaceRightEvent());
+        gameRef.miniGameBloc.add(FaceRightEvent());
       }
       current = ArcherState.run;
       directionX += hypotenuseSpeed;
       directionY += hypotenuseSpeed;
     }
      else if(archerDirection == ArcherDirection.downLeft){
-      if (gameRef.tapingDownBloc.state.isPlayerFacingRight) {
+      if (gameRef.miniGameBloc.state.isPlayerFacingRight) {
         flipHorizontallyAroundCenter();
-        gameRef.tapingDownBloc.add(FaceLeftEvent());
+        gameRef.miniGameBloc.add(FaceLeftEvent());
       }
       current = ArcherState.run;
       directionX -= hypotenuseSpeed;
@@ -200,15 +200,8 @@ class ArcherPlayer extends SpriteAnimationGroupComponent with HasGameRef<MiniGam
     velocity = Vector2(directionX, directionY);
     position += velocity * dt;
 
-    // this "if" condition keeps the archer insead the screen
-    if(position.x <= 0)
-      position.x = 0;
-    if(position.x >= gameRef.size.x)
-      position.x = gameRef.size.x;
-    if(position.y <= 0)
-      position.y = 0;
-    if(position.y >= gameRef.size.y)
-      position.y = gameRef.size.y;   
+    // this keeps the archer inseade the screen
+    position.clamp(Vector2.zero(), Vector2(gameRef.size.x, gameRef.size.y));
   }
  
   // this method is used to prevent repeating the same code
@@ -219,9 +212,35 @@ class ArcherPlayer extends SpriteAnimationGroupComponent with HasGameRef<MiniGam
       SpriteAnimationData.sequenced(
         amount: frameAmount,
         stepTime: stepTime,
-        textureSize: Vector2.all(100),
+        textureSize: Vector2(100,100),
       ),
     );
   }
   
+  void _killArcher(double dt) {
+    countdown.resume();
+    countdown.update(dt);
+      // untel the time is up the current state will be the death state
+      // when the time is up the current state will be the deathStatic state
+      if(countdown.finished){
+        current = ArcherState.deathStatic;
+        isDeathAudioPlayed = false;
+      } else {
+        if(!isDeathAudioPlayed){
+          FlameAudio.play("death.mp3");
+          isDeathAudioPlayed = true;
+        }
+        current = ArcherState.death;
+    }    
+  }
+
+  void _archerRunningSound() {
+    if(current != ArcherState.idle && !isArcherRunning){
+      runSoundBmg.play("running.mp3");
+      isArcherRunning = true;
+    } else if (current == ArcherState.idle){
+      isArcherRunning = false;
+      runSoundBmg.stop();
+    }
+  }
 }
