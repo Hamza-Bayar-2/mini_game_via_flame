@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:math';
+import 'package:flame/collisions.dart';
 import 'package:flame/components.dart';
 import 'package:flame/events.dart';
 import 'package:flame_audio/bgm.dart';
@@ -7,11 +8,13 @@ import 'package:flame_audio/flame_audio.dart';
 import 'package:flutter/src/services/raw_keyboard.dart';
 import 'package:mini_game_via_flame/blocs/mini_game/mini_game_bloc.dart';
 import 'package:mini_game_via_flame/flame_layer/mini_game.dart';
+import 'package:mini_game_via_flame/sprites/goblin.dart';
 
 enum ArcherState {attack, death, fall, getHit, idle, jump, run, deathStatic}
 enum ArcherDirection {up, down, left, right, upRight, upLeft, downRight, downLeft, none}
 
-class ArcherPlayer extends SpriteAnimationGroupComponent with HasGameRef<MiniGame>, KeyboardHandler, TapCallbacks, DragCallbacks{
+class ArcherPlayer extends SpriteAnimationGroupComponent with HasGameRef<MiniGame>, KeyboardHandler, TapCallbacks, DragCallbacks,
+ CollisionCallbacks{
   ArcherPlayer() : super(position: Vector2.all(500), size: Vector2.all(200), anchor: Anchor.centerRight);
   ArcherDirection archerDirection = ArcherDirection.none;
   double speed = 250;
@@ -20,14 +23,17 @@ class ArcherPlayer extends SpriteAnimationGroupComponent with HasGameRef<MiniGam
   late double hypotenuseSpeed = sqrt(speed*speed/2);
   Vector2 velocity = Vector2.zero();
   // this timer is used for the archer death animation
-  final countdown = Timer(0.7);
+  final archerDeathCountdown = Timer(0.7);
+  final archerGetHitCountdown = Timer(0.21);
   bool isDeathAudioPlayed = false;
   bool isArcherRunning = false;
+  bool isArcherGetHit = false;
   late Bgm runSoundBmg = FlameAudio.bgmFactory(audioCache: FlameAudio.audioCache);
 
   @override
   Future<void> onLoad() async {
     _loadAnimation();
+    add(RectangleHitbox.relative(Vector2(0.25,0.30), parentSize: Vector2.all(200), anchor: Anchor.center));
     return super.onLoad();
   }
 
@@ -37,15 +43,15 @@ class ArcherPlayer extends SpriteAnimationGroupComponent with HasGameRef<MiniGam
     // so I could read the isTapingDown boolean variable
     if(gameRef.miniGameBloc.state.isArcherDead) {
       _killArcher(dt);
-      isArcherRunning = false;
       runSoundBmg.stop();
+    } else if(isArcherGetHit) {
+      _archerGetHit(dt); 
     } else if(gameRef.miniGameBloc.state.isTapingDown){
-      countdown.stop();
+      archerDeathCountdown.stop();
       current = ArcherState.attack;
-      isArcherRunning = false;
       runSoundBmg.stop();
     } else {
-      countdown.stop();
+      archerDeathCountdown.stop();
       _archerMovement(dt);
       _archerRunningSound();
     }
@@ -73,6 +79,18 @@ class ArcherPlayer extends SpriteAnimationGroupComponent with HasGameRef<MiniGam
     return super.onKeyEvent(event, keysPressed);
   }
 
+  @override
+  void onCollision(Set<Vector2> intersectionPoints, PositionComponent other) {
+    if(other is Goblin) {
+      gameRef.miniGameBloc.add(DecreaseHealthEvent());
+      isArcherGetHit = true;
+      if(!gameRef.miniGameBloc.state.isArcherDead){
+        // FlameAudio.play("hurt.mp3");
+      }
+    }
+    super.onCollision(intersectionPoints, other);
+  }
+  
   // this method make the archer move according to the keys that pressed
   void _keyBoardDirectionHandler(
     bool isUpKeyPressed, 
@@ -212,19 +230,21 @@ class ArcherPlayer extends SpriteAnimationGroupComponent with HasGameRef<MiniGam
       SpriteAnimationData.sequenced(
         amount: frameAmount,
         stepTime: stepTime,
-        textureSize: Vector2(100,100),
+        textureSize: Vector2.all(100),
       ),
     );
   }
   
   void _killArcher(double dt) {
-    countdown.resume();
-    countdown.update(dt);
+    archerDeathCountdown.resume();
+    archerDeathCountdown.update(dt);
       // untel the time is up the current state will be the death state
       // when the time is up the current state will be the deathStatic state
-      if(countdown.finished){
+      if(archerDeathCountdown.finished){
         current = ArcherState.deathStatic;
         isDeathAudioPlayed = false;
+        // if this line uncommented the death animation will be repeating constantly
+        // archerDeathCountdown.stop();
       } else {
         if(!isDeathAudioPlayed){
           FlameAudio.play("death.mp3");
@@ -235,12 +255,23 @@ class ArcherPlayer extends SpriteAnimationGroupComponent with HasGameRef<MiniGam
   }
 
   void _archerRunningSound() {
-    if(current != ArcherState.idle && !isArcherRunning){
+    if(current != ArcherState.idle && !isArcherRunning) {
       runSoundBmg.play("running.mp3");
       isArcherRunning = true;
     } else if (current == ArcherState.idle){
       isArcherRunning = false;
       runSoundBmg.stop();
+    }
+  }
+  
+  void _archerGetHit(double dt) {
+    current = ArcherState.getHit;
+    archerGetHitCountdown.resume();
+    archerGetHitCountdown.update(dt);
+    if(archerGetHitCountdown.finished){
+      FlameAudio.play("hurt.mp3");
+      isArcherGetHit = false;
+      archerGetHitCountdown.stop();
     }
   }
 }

@@ -22,3 +22,5 @@ class FaceLeftEvent extends MiniGameEvent {}
 class StopTheGame extends MiniGameEvent {}
 
 class StartTheGame extends MiniGameEvent {}
+
+class KillMonster extends MiniGameEvent {}

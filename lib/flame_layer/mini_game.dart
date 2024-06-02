@@ -1,5 +1,3 @@
-import 'dart:math';
-
 import 'package:flame/components.dart';
 import 'package:flame/events.dart';
 import 'package:flame/game.dart';
@@ -14,7 +12,7 @@ import 'package:mini_game_via_flame/sprites/goblin.dart';
 import 'package:flame/experimental.dart';
 import 'package:flame/input.dart';
 
-class MiniGame extends FlameGame with HasKeyboardHandlerComponents, TapCallbacks, DragCallbacks{
+class MiniGame extends FlameGame with HasKeyboardHandlerComponents, TapCallbacks, DragCallbacks, HasCollisionDetection{
   final MiniGameBloc miniGameBloc;
   MiniGame({required this.miniGameBloc});
   late final Sprite background;
@@ -24,7 +22,7 @@ class MiniGame extends FlameGame with HasKeyboardHandlerComponents, TapCallbacks
   // in the archer's attack animation. 
   final Timer countdownAndRepeat = Timer(0.72);
   late Bgm backgroundMusic = FlameAudio.bgmFactory(audioCache: FlameAudio.audioCache); 
-  final double goblinSpawnPeriod = 3;
+  final double goblinSpawnPeriod = 2;
   
 
   @override
@@ -36,20 +34,8 @@ class MiniGame extends FlameGame with HasKeyboardHandlerComponents, TapCallbacks
     add(SpriteComponent(sprite: background, size: size));
     add(FlameBlocProvider.value(value: miniGameBloc, children: [archerPlayer]));
 
-    add(
-      SpawnComponent(
-        factory: (index) {
-          return Goblin(isSpawnRight: true, size: Vector2.all(200));
-        },
-        period: goblinSpawnPeriod,
-        area: Rectangle.fromLTWH(size.x, 0, 0, size.y),
-      ),
-    );
-
-    add(_goblinCreater(true, Vector2.all(250), size.x));
-    add(_goblinCreater(false, Vector2.all(250), 0));
-
-    // add(Goblin(isSpawnRight: true, position: Vector2.all(400), size: Vector2.all(200)));
+    add(_goblinCreater(true, Vector2.all(280), size.x));
+    add(_goblinCreater(false, Vector2.all(280), 0));
 
     return super.onLoad();
   }
@@ -68,14 +54,22 @@ class MiniGame extends FlameGame with HasKeyboardHandlerComponents, TapCallbacks
     } else {
       countdownAndRepeat.stop();
     } 
+
+    if(miniGameBloc.state.isArcherDead) {
+      backgroundMusic.pause();
+    } else if(!backgroundMusic.isPlaying) {
+      backgroundMusic.play("bgm.mp3", volume: 0.2);
+      backgroundMusic.resume();
+    }
     super.update(dt);
   }
 
   @override
   void onTapDown(TapDownEvent event) {
     print("tapdown");
-    if(!backgroundMusic.isPlaying) {
-      backgroundMusic.play("bgm.mp3", volume: 0.1);
+
+    if(!backgroundMusic.isPlaying){
+      backgroundMusic.play("bgm.mp3", volume: 0.2);
     }
     // by this event the isTapingDown bool variable is changing to true
     miniGameBloc.add(TapingEvent());

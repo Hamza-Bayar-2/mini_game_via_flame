@@ -1,9 +1,15 @@
+import 'dart:async';
+
+import 'package:flame/collisions.dart';
 import 'package:flame/components.dart';
+import 'package:flame_audio/flame_audio.dart';
+import 'package:mini_game_via_flame/blocs/mini_game/mini_game_bloc.dart';
 import 'package:mini_game_via_flame/flame_layer/mini_game.dart';
+import 'package:mini_game_via_flame/sprites/goblin.dart';
 
 
 
-class Arrow extends SpriteAnimationComponent with HasGameRef<MiniGame>{
+class Arrow extends SpriteAnimationComponent with HasGameRef<MiniGame>, CollisionCallbacks{
   Arrow({
     SpriteAnimation? animation,
     Vector2? position,
@@ -19,6 +25,11 @@ class Arrow extends SpriteAnimationComponent with HasGameRef<MiniGame>{
   // because when I do it like that the arrow will change direction 
   // according to the archer even after leaving the bow
   late bool isArcherFacingRight = gameRef.miniGameBloc.state.isPlayerFacingRight;
+  @override
+  FutureOr<void> onLoad() {
+    add(RectangleHitbox.relative(parentSize: Vector2(48, 10), Vector2(1, 1), anchor: Anchor.center));
+    return super.onLoad();
+  }
 
   @override
   void update(double dt) {
@@ -45,5 +56,15 @@ class Arrow extends SpriteAnimationComponent with HasGameRef<MiniGame>{
       removeFromParent(); 
     }
     super.update(dt);
+  }
+
+  @override
+  void onCollision(Set<Vector2> intersectionPoints, PositionComponent other) {
+    if(other is Goblin) {
+      removeFromParent();
+      gameRef.miniGameBloc.add(KillMonster());
+      print("arrow hited");
+    }
+    super.onCollision(intersectionPoints, other);
   }
 }

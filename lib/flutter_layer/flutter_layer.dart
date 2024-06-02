@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'dart:math';
 
 import 'package:flutter/material.dart';
@@ -18,27 +19,12 @@ class FlutterLayer extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
                 Text("Heltheer: ${state.archerHelth}"),
-                TextButton(
-                  onPressed: () {
-                    context.read<MiniGameBloc>().add(DecreaseHealthEvent());
-                  }, 
-                  child: Text("hit")
-                ),
+                Text("Kill amount: ${state.monsterKillNumber}"),
                 TextButton(
                   onPressed: () {
                     context.read<MiniGameBloc>().add(ResetHealthEvent());
                   }, 
-                  child: Text("reset health")
-                ),
-                TextButton(
-                  onPressed: () {
-                    if(state.isGameGoingOn){
-                      context.read<MiniGameBloc>().add(StopTheGame());
-                    } else {
-                      context.read<MiniGameBloc>().add(StartTheGame());
-                    }
-                  }, 
-                  child: Text("Stop/Start The Game")
+                  child: const Text("Reset Health")
                 ),
               ],
             ),
