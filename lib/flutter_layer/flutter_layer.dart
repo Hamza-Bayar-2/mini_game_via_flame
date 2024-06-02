@@ -22,9 +22,17 @@ class FlutterLayer extends StatelessWidget {
                 Text("Kill amount: ${state.monsterKillNumber}"),
                 TextButton(
                   onPressed: () {
-                    context.read<MiniGameBloc>().add(ResetHealthEvent());
+                    context.read<MiniGameBloc>().add(ChangeDifficultyLevelEvent());
                   }, 
-                  child: const Text("Reset Health")
+                  child: Text("Change Difficulty : ${state.difficultyLevel}")
+                ),
+                TextButton(
+                  onPressed: () {
+                    if(state.isArcherDead){
+                      context.read<MiniGameBloc>().add(ResetHealthEvent());
+                    }
+                  }, 
+                  child: const Text("Revive")
                 ),
               ],
             ),

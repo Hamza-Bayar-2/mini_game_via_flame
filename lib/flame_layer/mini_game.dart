@@ -11,6 +11,7 @@ import 'dart:async';
 import 'package:mini_game_via_flame/sprites/goblin.dart';
 import 'package:flame/experimental.dart';
 import 'package:flame/input.dart';
+import 'package:mini_game_via_flame/sprites/heart.dart';
 
 class MiniGame extends FlameGame with HasKeyboardHandlerComponents, TapCallbacks, DragCallbacks, HasCollisionDetection{
   final MiniGameBloc miniGameBloc;
@@ -22,20 +23,29 @@ class MiniGame extends FlameGame with HasKeyboardHandlerComponents, TapCallbacks
   // in the archer's attack animation. 
   final Timer countdownAndRepeat = Timer(0.72);
   late Bgm backgroundMusic = FlameAudio.bgmFactory(audioCache: FlameAudio.audioCache); 
-  final double goblinSpawnPeriod = 2;
+  final double heartSpawnPeriod = 8;
+  late SpawnComponent heartSpawner;
+  late SpawnComponent goblinSpawner1;
+  late SpawnComponent goblinSpawner2;
+  late bool wasArcherDead = miniGameBloc.state.isArcherDead;
+  late int previousDifficultyLevel = miniGameBloc.state.difficultyLevel;
+  
   
 
   @override
   Future<void> onLoad() async{
-    await FlameAudio.audioCache.loadAll(['running.mp3', 'arrow.mp3', 'death.mp3', 'hurt.mp3', 'monsterDeath.mp3', 'bgm.mp3']);
+    await FlameAudio.audioCache.loadAll(['running.mp3', 'arrow.mp3', 'death.mp3', 'hurt.mp3', 'monsterDeath.mp3', 'bgm.mp3', 'powerUp.mp3']);
     await images.loadAllImages();
     background = Sprite(images.fromCache("background.png"));
     archerPlayer = ArcherPlayer();
     add(SpriteComponent(sprite: background, size: size));
     add(FlameBlocProvider.value(value: miniGameBloc, children: [archerPlayer]));
 
-    add(_goblinCreater(true, Vector2.all(280), size.x));
-    add(_goblinCreater(false, Vector2.all(280), 0));
+    heartSpawner = _heartCreater();
+    goblinSpawner1 = _goblinCreater(true, Vector2.all(280), size.x);
+    goblinSpawner2 = _goblinCreater(false, Vector2.all(280), 0);
+    
+    addAll({heartSpawner, goblinSpawner1, goblinSpawner2});
 
     return super.onLoad();
   }
@@ -61,6 +71,9 @@ class MiniGame extends FlameGame with HasKeyboardHandlerComponents, TapCallbacks
       backgroundMusic.play("bgm.mp3", volume: 0.2);
       backgroundMusic.resume();
     }
+
+    _removeComponentWhenArcherDeadAndAddComponentWhenArcherRevive();
+    _goblinSpawnPeriodChanger();
     super.update(dt);
   }
 
@@ -106,12 +119,12 @@ class MiniGame extends FlameGame with HasKeyboardHandlerComponents, TapCallbacks
 
     // this method creates arrow everytime it called
   Arrow _arrowCreater() {
-    return Arrow(
-      position: archerPlayer.position + (miniGameBloc.state.isPlayerFacingRight ? Vector2(-80, -18) : Vector2(80, -18)),
-      size: Vector2(48, 10),
-      animation: _arrowAnimation(),
-      anchor: Anchor.center
-    );
+      return Arrow(
+        position: archerPlayer.position + (miniGameBloc.state.isPlayerFacingRight ? Vector2(-80, -18) : Vector2(80, -18)),
+        size: Vector2(48, 10),
+        animation: _arrowAnimation(),
+        anchor: Anchor.center
+      );
     }
 
   SpriteAnimation _arrowAnimation() {
@@ -130,9 +143,62 @@ class MiniGame extends FlameGame with HasKeyboardHandlerComponents, TapCallbacks
         factory: (index) {
           return Goblin(isSpawnRight: isSpawnRight, size: vector2);
         },
-        period: goblinSpawnPeriod,
+        period: miniGameBloc.state.goblinSpawnPeriod,
         area: Rectangle.fromLTWH(positionX, 0, 0, size.y),
       );
+  }
+
+  SpawnComponent _heartCreater() {
+    if(miniGameBloc.state.archerHelth < 100 && !miniGameBloc.state.isArcherDead){}
+    return SpawnComponent(
+      factory: (index) {
+        return Heart(animation: _heartAnimation(), anchor: Anchor.center);
+      },
+      period: heartSpawnPeriod,
+      area: Rectangle.fromLTWH(0, 0, size.x, size.y),
+    );
+  }
+
+  SpriteAnimation _heartAnimation() {
+    return SpriteAnimation.fromFrameData(
+      images.fromCache("heart.png"),
+      SpriteAnimationData.sequenced(
+        amount: 5,
+        stepTime: 0.1,
+        textureSize: Vector2.all(40),
+      ),
+    );
+  }
+
+  void _removeComponentWhenArcherDeadAndAddComponentWhenArcherRevive() {
+
+    if(miniGameBloc.state.isArcherDead && !wasArcherDead){
+      heartSpawner.removeFromParent();
+      goblinSpawner1.removeFromParent();
+      goblinSpawner2.removeFromParent();
+    } else if (!miniGameBloc.state.isArcherDead && wasArcherDead){
+      heartSpawner = _heartCreater();
+      goblinSpawner1 = _goblinCreater(true, Vector2.all(280), size.x);
+      goblinSpawner2 = _goblinCreater(false, Vector2.all(280), 0);
+
+      addAll({heartSpawner, goblinSpawner1, goblinSpawner2});
+    }
+
+    wasArcherDead = miniGameBloc.state.isArcherDead;
+  }
+
+  void _goblinSpawnPeriodChanger() {
+    if(miniGameBloc.state.difficultyLevel != previousDifficultyLevel) {
+      goblinSpawner1.removeFromParent();
+      goblinSpawner2.removeFromParent();
+
+      goblinSpawner1 = _goblinCreater(true, Vector2.all(280), size.x);
+      goblinSpawner2 = _goblinCreater(false, Vector2.all(280), 0);
+
+      addAll({goblinSpawner1, goblinSpawner2});
+    }
+
+    previousDifficultyLevel = miniGameBloc.state.difficultyLevel;
   }
 
 }

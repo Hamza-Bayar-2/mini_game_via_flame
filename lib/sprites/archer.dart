@@ -84,9 +84,6 @@ class ArcherPlayer extends SpriteAnimationGroupComponent with HasGameRef<MiniGam
     if(other is Goblin) {
       gameRef.miniGameBloc.add(DecreaseHealthEvent());
       isArcherGetHit = true;
-      if(!gameRef.miniGameBloc.state.isArcherDead){
-        // FlameAudio.play("hurt.mp3");
-      }
     }
     super.onCollision(intersectionPoints, other);
   }

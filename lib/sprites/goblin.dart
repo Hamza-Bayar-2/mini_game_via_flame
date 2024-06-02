@@ -21,11 +21,12 @@ class Goblin extends SpriteAnimationGroupComponent with HasGameRef<MiniGame>, Co
   bool isGoblinFacingRight = true;
   bool isDying = false;
   final Timer goblinDeathTimer = Timer(0.4);
+  final rectangleHitbox = RectangleHitbox.relative(parentSize: Vector2.all(280), Vector2(0.15, 0.22), position: Vector2(120, 124));
 
   @override
   FutureOr<void> onLoad() {
     _loadAnimation();
-    add(RectangleHitbox.relative(parentSize: Vector2.all(280), Vector2(0.15, 0.22), position: Vector2(120, 124)));
+    add(rectangleHitbox);
     return super.onLoad();
   }
 
@@ -33,6 +34,7 @@ class Goblin extends SpriteAnimationGroupComponent with HasGameRef<MiniGame>, Co
   void update(double dt) { 
     
     if(isDying) {
+      rectangleHitbox.removeFromParent();
       goblinDeathTimer.resume();
       goblinDeathTimer.update(dt);
       current = GoblinState.death;
