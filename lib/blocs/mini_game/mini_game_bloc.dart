@@ -48,5 +48,11 @@ class MiniGameBloc extends Bloc<MiniGameEvent, MiniGameState> {
       emit(state.copyWith(difficultyLevel: newDifficulty > 3 ? 1 : newDifficulty));
       emit(state.copyWith(goblinSpawnPeriod: newDifficulty > 3 ? 2 : newGoblinSpawnPeriod));
     });
+    on<SpacePressingEvent>((event, emit) {
+      emit(state.copyWith(isSpaceKeyPressing: true));
+    });
+    on<NotSpacePressingEvent>((event, emit) {
+      emit(state.copyWith(isSpaceKeyPressing: false));
+    });
   }
 }

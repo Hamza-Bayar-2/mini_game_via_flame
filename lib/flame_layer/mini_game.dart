@@ -1,9 +1,14 @@
+import 'dart:html';
+
 import 'package:flame/components.dart';
 import 'package:flame/events.dart';
 import 'package:flame/game.dart';
 import 'package:flame_audio/bgm.dart';
 import 'package:flame_audio/flame_audio.dart';
 import 'package:flame_bloc/flame_bloc.dart';
+import 'package:flutter/src/services/keyboard_key.g.dart';
+import 'package:flutter/src/services/raw_keyboard.dart';
+import 'package:flutter/src/widgets/focus_manager.dart';
 import 'package:mini_game_via_flame/blocs/mini_game/mini_game_bloc.dart';
 import 'package:mini_game_via_flame/sprites/archer.dart';
 import 'package:mini_game_via_flame/sprites/arrow.dart';
@@ -52,7 +57,7 @@ class MiniGame extends FlameGame with HasKeyboardHandlerComponents, TapCallbacks
 
   @override
   void update(double dt) {
-    if(miniGameBloc.state.isTapingDown && !miniGameBloc.state.isArcherDead) {
+    if((miniGameBloc.state.isSpaceKeyPressing || miniGameBloc.state.isTapingDown) && !miniGameBloc.state.isArcherDead) {
       countdownAndRepeat.update(dt);
       countdownAndRepeat.resume();
       // when the time is up the arrow is released
@@ -78,9 +83,18 @@ class MiniGame extends FlameGame with HasKeyboardHandlerComponents, TapCallbacks
   }
 
   @override
+  KeyEventResult onKeyEvent(RawKeyEvent event, Set<LogicalKeyboardKey> keysPressed) {
+    if(keysPressed.contains(LogicalKeyboardKey.space)) {
+      miniGameBloc.add(SpacePressingEvent());
+    } else {
+      miniGameBloc.add(NotSpacePressingEvent());
+    }
+    return super.onKeyEvent(event, keysPressed);
+  }
+
+  @override
   void onTapDown(TapDownEvent event) {
     print("tapdown");
-
     if(!backgroundMusic.isPlaying){
       backgroundMusic.play("bgm.mp3", volume: 0.2);
     }

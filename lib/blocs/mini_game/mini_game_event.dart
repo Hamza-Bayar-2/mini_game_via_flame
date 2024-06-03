@@ -28,3 +28,7 @@ class StartTheGame extends MiniGameEvent {}
 class KillMonster extends MiniGameEvent {}
 
 class ChangeDifficultyLevelEvent extends MiniGameEvent {}
+
+class SpacePressingEvent extends MiniGameEvent {}
+
+class NotSpacePressingEvent extends MiniGameEvent {}

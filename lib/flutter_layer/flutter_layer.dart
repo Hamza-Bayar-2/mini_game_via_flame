@@ -13,8 +13,8 @@ class FlutterLayer extends StatelessWidget {
     return BlocBuilder<MiniGameBloc, MiniGameState>(
       builder: (context, state) {
         return Column(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            const SizedBox(height: 20,),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
@@ -36,6 +36,11 @@ class FlutterLayer extends StatelessWidget {
                 ),
               ],
             ),
+            const Row(
+              children: [
+                Text("controls: w a s d space")
+              ],
+            )
           ],
         );
       },

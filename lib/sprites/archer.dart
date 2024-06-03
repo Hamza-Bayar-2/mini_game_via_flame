@@ -11,12 +11,12 @@ import 'package:mini_game_via_flame/flame_layer/mini_game.dart';
 import 'package:mini_game_via_flame/sprites/goblin.dart';
 
 enum ArcherState {attack, death, fall, getHit, idle, jump, run, deathStatic}
-enum ArcherDirection {up, down, left, right, upRight, upLeft, downRight, downLeft, none}
+enum PressedKey {up, down, left, right, upRight, upLeft, downRight, downLeft, space, none}
 
 class ArcherPlayer extends SpriteAnimationGroupComponent with HasGameRef<MiniGame>, KeyboardHandler, TapCallbacks, DragCallbacks,
  CollisionCallbacks{
   ArcherPlayer() : super(position: Vector2.all(500), size: Vector2.all(200), anchor: Anchor.centerRight);
-  ArcherDirection archerDirection = ArcherDirection.none;
+  PressedKey pressedKey = PressedKey.none;
   double speed = 250;
   // When the player runs diagonally, this value will be used
   // 250*250 = x*x + x*x, x = hypotenuseSpeed
@@ -44,6 +44,7 @@ class ArcherPlayer extends SpriteAnimationGroupComponent with HasGameRef<MiniGam
     if(gameRef.miniGameBloc.state.isArcherDead) {
       _killArcher(dt);
       runSoundBmg.stop();
+      isArcherGetHit = false;
     } else if(isArcherGetHit) {
       _archerGetHit(dt); 
     } else if(gameRef.miniGameBloc.state.isTapingDown){
@@ -68,12 +69,14 @@ class ArcherPlayer extends SpriteAnimationGroupComponent with HasGameRef<MiniGam
     keysPressed.contains(LogicalKeyboardKey.keyD);
     final isLeftKeyPressed = keysPressed.contains(LogicalKeyboardKey.arrowLeft) || 
     keysPressed.contains(LogicalKeyboardKey.keyA);
+    final isSpaceKeyPressed = keysPressed.contains(LogicalKeyboardKey.space);
 
     _keyBoardDirectionHandler(
       isUpKeyPressed, 
       isDownKeyPressed, 
       isRightKeyPressed, 
-      isLeftKeyPressed
+      isLeftKeyPressed,
+      isSpaceKeyPressed
     );
 
     return super.onKeyEvent(event, keysPressed);
@@ -94,32 +97,37 @@ class ArcherPlayer extends SpriteAnimationGroupComponent with HasGameRef<MiniGam
     bool isDownKeyPressed, 
     bool isRightKeyPressed, 
     bool isLeftKeyPressed, 
+    bool isSpaceKeyPressed
     ) {
-    if(isUpKeyPressed && isDownKeyPressed){
-      archerDirection = ArcherDirection.none;
+
+    if(isSpaceKeyPressed){
+      pressedKey = PressedKey.space;
+    }
+    else if(isUpKeyPressed && isDownKeyPressed){
+      pressedKey = PressedKey.none;
     } else if(isRightKeyPressed && isLeftKeyPressed){
-      archerDirection = ArcherDirection.none;
+      pressedKey = PressedKey.none;
     } 
     else if(isUpKeyPressed && isRightKeyPressed) {
-      archerDirection = ArcherDirection.upRight;
+      pressedKey = PressedKey.upRight;
     } else if(isUpKeyPressed && isLeftKeyPressed) {
-      archerDirection = ArcherDirection.upLeft;
+      pressedKey = PressedKey.upLeft;
     } else if(isDownKeyPressed && isRightKeyPressed) {
-      archerDirection = ArcherDirection.downRight;
+      pressedKey = PressedKey.downRight;
     } else if(isDownKeyPressed && isLeftKeyPressed) {
-      archerDirection = ArcherDirection.downLeft;
+      pressedKey = PressedKey.downLeft;
     } 
     else if(isUpKeyPressed){
-      archerDirection = ArcherDirection.up;
+      pressedKey = PressedKey.up;
     } else if(isDownKeyPressed){
-      archerDirection = ArcherDirection.down;
+      pressedKey = PressedKey.down;
     } else if(isRightKeyPressed){
-      archerDirection = ArcherDirection.right;
+      pressedKey = PressedKey.right;
     } else if(isLeftKeyPressed){
-      archerDirection = ArcherDirection.left;
+      pressedKey = PressedKey.left;
     } 
     else{
-      archerDirection = ArcherDirection.none;
+      pressedKey = PressedKey.none;
     } 
   }
 
@@ -147,31 +155,32 @@ class ArcherPlayer extends SpriteAnimationGroupComponent with HasGameRef<MiniGam
     };
   }
 
-  // This method can make the archer moves according to the ArcherDirection enum
+  // This method can make the archer moves according to the PressedKey enum
   void _archerMovement(double dt) {
     double directionX = 0.0, directionY = 0.0;
 
-    if (archerDirection == ArcherDirection.up) {
+    if (pressedKey == PressedKey.up) {
       current = ArcherState.run;
       directionY -= speed;
-    } else if (archerDirection == ArcherDirection.down) {
+    } else if (pressedKey == PressedKey.down) {
       current = ArcherState.run;
       directionY += speed;
-    } else if (archerDirection == ArcherDirection.right) {
+    } else if (pressedKey == PressedKey.right) {
       if (!gameRef.miniGameBloc.state.isPlayerFacingRight) {
         flipHorizontallyAroundCenter();
         gameRef.miniGameBloc.add(FaceRightEvent());
       }
       current = ArcherState.run;
       directionX += speed;
-    } else if (archerDirection == ArcherDirection.left) {
+    } else if (pressedKey == PressedKey.left) {
       if (gameRef.miniGameBloc.state.isPlayerFacingRight) {
         flipHorizontallyAroundCenter();
         gameRef.miniGameBloc.add(FaceLeftEvent());
       }
       current = ArcherState.run;
       directionX -= speed;
-    } else if(archerDirection == ArcherDirection.upRight){
+    } 
+    else if(pressedKey == PressedKey.upRight){
       if (!gameRef.miniGameBloc.state.isPlayerFacingRight) {
         flipHorizontallyAroundCenter();
         gameRef.miniGameBloc.add(FaceRightEvent());
@@ -180,7 +189,7 @@ class ArcherPlayer extends SpriteAnimationGroupComponent with HasGameRef<MiniGam
       directionY -= hypotenuseSpeed;
       directionX += hypotenuseSpeed;
     }
-     else if(archerDirection == ArcherDirection.upLeft){
+     else if(pressedKey == PressedKey.upLeft){
       if (gameRef.miniGameBloc.state.isPlayerFacingRight) {
         flipHorizontallyAroundCenter();
         gameRef.miniGameBloc.add(FaceLeftEvent());
@@ -189,7 +198,7 @@ class ArcherPlayer extends SpriteAnimationGroupComponent with HasGameRef<MiniGam
       directionY -= hypotenuseSpeed;
       directionX -= hypotenuseSpeed;
     }
-     else if(archerDirection == ArcherDirection.downRight){
+     else if(pressedKey == PressedKey.downRight){
       if (!gameRef.miniGameBloc.state.isPlayerFacingRight) {
         flipHorizontallyAroundCenter();
         gameRef.miniGameBloc.add(FaceRightEvent());
@@ -198,7 +207,7 @@ class ArcherPlayer extends SpriteAnimationGroupComponent with HasGameRef<MiniGam
       directionX += hypotenuseSpeed;
       directionY += hypotenuseSpeed;
     }
-     else if(archerDirection == ArcherDirection.downLeft){
+     else if(pressedKey == PressedKey.downLeft){
       if (gameRef.miniGameBloc.state.isPlayerFacingRight) {
         flipHorizontallyAroundCenter();
         gameRef.miniGameBloc.add(FaceLeftEvent());
@@ -206,9 +215,14 @@ class ArcherPlayer extends SpriteAnimationGroupComponent with HasGameRef<MiniGam
       current = ArcherState.run;
       directionX -= hypotenuseSpeed;
       directionY += hypotenuseSpeed;
-    } else if (archerDirection == ArcherDirection.none) {
+    } 
+    else if (pressedKey == PressedKey.none) {
       current = ArcherState.idle;
-    } else {
+    } 
+    else if(pressedKey == PressedKey.space){
+      current = ArcherState.attack;
+    } 
+    else {
       current = ArcherState.idle;
     }
 
@@ -252,10 +266,10 @@ class ArcherPlayer extends SpriteAnimationGroupComponent with HasGameRef<MiniGam
   }
 
   void _archerRunningSound() {
-    if(current != ArcherState.idle && !isArcherRunning) {
+    if(current != ArcherState.idle && current != ArcherState.attack && !isArcherRunning) {
       runSoundBmg.play("running.mp3");
       isArcherRunning = true;
-    } else if (current == ArcherState.idle){
+    } else if (current == ArcherState.idle || current == ArcherState.attack){
       isArcherRunning = false;
       runSoundBmg.stop();
     }
