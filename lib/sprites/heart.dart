@@ -16,7 +16,7 @@ class Heart extends SpriteAnimationComponent with HasGameRef<MiniGame>, Collisio
     Anchor? anchor
   }) : super(animation: animation, position: position, size: size, anchor: anchor);
 
-  Timer heartDisappearTimer = Timer(5);
+  Timer heartDisappearTimer = Timer(3.5);
 
   @override
   FutureOr<void> onLoad() {

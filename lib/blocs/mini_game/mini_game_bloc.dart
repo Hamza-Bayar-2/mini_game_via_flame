@@ -14,12 +14,12 @@ class MiniGameBloc extends Bloc<MiniGameEvent, MiniGameState> {
       emit(state.copyWith(isTapingDown: false));
     });
     on<DecreaseHealthEvent>((event, emit) {
-      final newHelth = state.archerHelth - 10;
+      final newHelth = state.archerHelth - 20;
       emit(state.copyWith(archerHelth: newHelth <= 0 ? 0 : newHelth));
       emit(state.copyWith(isArcherDead: state.archerHelth <= 0 ));
     });
     on<IncreaseHealthEvent>((event, emit) {
-      final newHelth = state.archerHelth + 20;
+      final newHelth = state.archerHelth + 10;
       emit(state.copyWith(archerHelth: newHelth >= 100 ? 100 : newHelth));
     });
     on<ResetHealthEvent>((event, emit) {
