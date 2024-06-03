@@ -188,7 +188,7 @@ class MiniGame extends FlameGame with HasKeyboardHandlerComponents, TapCallbacks
   }
 
   void _goblinSpawnPeriodChanger() {
-    if(miniGameBloc.state.difficultyLevel != previousDifficultyLevel) {
+    if(miniGameBloc.state.difficultyLevel != previousDifficultyLevel && !miniGameBloc.state.isArcherDead) {
       goblinSpawner1.removeFromParent();
       goblinSpawner2.removeFromParent();
 
