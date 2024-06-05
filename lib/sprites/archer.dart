@@ -253,21 +253,21 @@ class ArcherPlayer extends SpriteAnimationGroupComponent with HasGameRef<MiniGam
   void _killArcher(double dt) {
     archerDeathCountdown.resume();
     archerDeathCountdown.update(dt);
-      // untel the time is up the current state will be the death state
-      // when the time is up the current state will be the deathStatic state
-      if(archerDeathCountdown.finished){
-        FlameAudio.play("lose.mp3", volume: 0.5);
-        current = ArcherState.deathStatic;
-        isDeathAudioPlayed = false;
-        gameRef.miniGameBloc.add(GoToWinOrLosePage());
-        // if this line uncommented the death animation will be repeating constantly
-        // archerDeathCountdown.stop();
-      } else {
-        if(!isDeathAudioPlayed){
-          FlameAudio.play("death.mp3");
-          isDeathAudioPlayed = true;
-        }
-        current = ArcherState.death;
+    // untel the time is up the current state will be the death state
+    // when the time is up the current state will be the deathStatic state
+    if(archerDeathCountdown.finished){
+      FlameAudio.play("lose.mp3", volume: 0.5);
+      current = ArcherState.deathStatic;
+      isDeathAudioPlayed = false;
+      gameRef.miniGameBloc.add(GoToWinOrLosePage());
+      // if this line uncommented the death animation will be repeating constantly
+      // archerDeathCountdown.stop();
+    } else {
+      if(!isDeathAudioPlayed){
+        FlameAudio.play("death.mp3");
+        isDeathAudioPlayed = true;
+      }
+      current = ArcherState.death;
     }    
   }
 

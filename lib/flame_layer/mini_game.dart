@@ -69,19 +69,7 @@ class MiniGame extends FlameGame with HasKeyboardHandlerComponents, TapCallbacks
       pauseEngine();
     }
 
-    if((miniGameBloc.state.isSpaceKeyPressing || miniGameBloc.state.isTapingDown) && !miniGameBloc.state.isArcherDead) {
-      countdownAndRepeat.update(dt);
-      countdownAndRepeat.resume();
-      // when the time is up the arrow is released
-      if(countdownAndRepeat.finished) {
-        add(_arrowCreater());
-        FlameAudio.play("arrow.mp3");
-        countdownAndRepeat.start();
-      }
-    } else {
-      countdownAndRepeat.stop();
-    } 
-
+    _arrowManager(dt);
     _gameStageManager();
     _backgroundMusicManager();
     _removeComponentWhenArcherDeadAndAddComponentWhenArcherRevive();
@@ -138,7 +126,22 @@ class MiniGame extends FlameGame with HasKeyboardHandlerComponents, TapCallbacks
     super.onDragCancel(event);
   }
 
-    // this method creates arrow everytime it called
+  void _arrowManager(double dt) {
+    if((miniGameBloc.state.isSpaceKeyPressing || miniGameBloc.state.isTapingDown) && !miniGameBloc.state.isArcherDead) {
+      countdownAndRepeat.update(dt);
+      countdownAndRepeat.resume();
+      // when the time is up the arrow is released
+      if(countdownAndRepeat.finished) {
+        add(_arrowCreater());
+        FlameAudio.play("arrow.mp3");
+        countdownAndRepeat.start();
+      }
+    } else {
+      countdownAndRepeat.stop();
+    } 
+  }
+
+  // this method creates arrow everytime it called
   Arrow _arrowCreater() {
       return Arrow(
         position: archerPlayer.position + (miniGameBloc.state.isPlayerFacingRight ? Vector2(-80, -18) : Vector2(80, -18)),
@@ -238,7 +241,6 @@ class MiniGame extends FlameGame with HasKeyboardHandlerComponents, TapCallbacks
   }
 
   void _backgroundMusicManager() {
-
     if(miniGameBloc.state.flutterPage != 1 || miniGameBloc.state.isArcherDead) {
       backgroundMusic.pause();
     } else if(!backgroundMusic.isPlaying) {
@@ -289,9 +291,14 @@ class MiniGame extends FlameGame with HasKeyboardHandlerComponents, TapCallbacks
       enemySpawner2 = _enemyCreater(false, Vector2.all(280), 0);
 
       addAll({enemySpawner1, enemySpawner2});
-      // The player completed all 4 stages and won the game flutterPage => 3
-      FlameAudio.play("win.mp3", volume: 0.5);
-      miniGameBloc.add(GoToWinOrLosePage());
+      
+      // if the player plays gameMode 0 (finite mode) he will win the game
+      // otherwise the player will continuo playing.
+      if(miniGameBloc.state.gameMode == 0) {
+        // The player completed all 4 stages and won the game flutterPage => 3
+        FlameAudio.play("win.mp3", volume: 0.5);
+        miniGameBloc.add(GoToWinOrLosePage());
+      }
     }
   }
 }

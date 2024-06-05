@@ -18,7 +18,7 @@ class MiniGameState extends Equatable {
   final int flutterPage;
   // there are 4 game stages (1 => goblin, 2 => mushroom, 3 => flying eye, 4 => skeleton)
   final int gameStage;
-  // there are 2 game mode (0 => kill mode, 1 => finite mode)
+  // there are 2 game mode (0 => finite mode, 1 => kill mode)
   final int gameMode;
 
   const MiniGameState({required this.isTapingDown, required this.archerHelth, required this.isPlayerFacingRight, required this.isArcherDead, required this.isGameGoingOn, required this.monsterKillNumber, required this.difficultyLevel, required this.enemySpawnPeriod, required this.isSpaceKeyPressing, required this.flutterPage, required this.gameStage, required this.gameMode});

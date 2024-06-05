@@ -53,7 +53,7 @@ class MainPage extends StatelessWidget {
                   onPressed: () {
                     context.read<MiniGameBloc>().add(ChangeGameMode());
                   }, 
-                  child: Text("Game Mode : ${state.gameMode == 0 ? "Kill Mode" : "Finite Mode"}")
+                  child: Text("Game Mode : ${state.gameMode == 0 ? "Finite Mode" : "Kill Mode"}")
                 ),
               ],
             ),
