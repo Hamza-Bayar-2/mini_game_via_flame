@@ -8,7 +8,10 @@ import 'package:flame_audio/flame_audio.dart';
 import 'package:flutter/src/services/raw_keyboard.dart';
 import 'package:mini_game_via_flame/blocs/mini_game/mini_game_bloc.dart';
 import 'package:mini_game_via_flame/flame_layer/mini_game.dart';
+import 'package:mini_game_via_flame/sprites/flyingEye.dart';
 import 'package:mini_game_via_flame/sprites/goblin.dart';
+import 'package:mini_game_via_flame/sprites/mushroom.dart';
+import 'package:mini_game_via_flame/sprites/skeleton.dart';
 
 enum ArcherState {attack, death, fall, getHit, idle, jump, run, deathStatic}
 enum PressedKey {up, down, left, right, upRight, upLeft, downRight, downLeft, space, none}
@@ -43,6 +46,7 @@ class ArcherPlayer extends SpriteAnimationGroupComponent with HasGameRef<MiniGam
     // so I could read the isTapingDown boolean variable
     if(gameRef.miniGameBloc.state.isArcherDead) {
       _killArcher(dt);
+      gameRef.miniGameBloc.add(ResetGameStageEvent());
       runSoundBmg.stop();
       isArcherGetHit = false;
     } else if(isArcherGetHit) {
@@ -84,7 +88,7 @@ class ArcherPlayer extends SpriteAnimationGroupComponent with HasGameRef<MiniGam
 
   @override
   void onCollision(Set<Vector2> intersectionPoints, PositionComponent other) {
-    if(other is Goblin) {
+    if(other is Goblin || other is Mushroom || other is Skeleton || other is FlyingEye) {
       gameRef.miniGameBloc.add(DecreaseHealthEvent());
       isArcherGetHit = true;
     }
@@ -252,8 +256,10 @@ class ArcherPlayer extends SpriteAnimationGroupComponent with HasGameRef<MiniGam
       // untel the time is up the current state will be the death state
       // when the time is up the current state will be the deathStatic state
       if(archerDeathCountdown.finished){
+        FlameAudio.play("lose.mp3", volume: 0.5);
         current = ArcherState.deathStatic;
         isDeathAudioPlayed = false;
+        gameRef.miniGameBloc.add(GoToWinOrLosePage());
         // if this line uncommented the death animation will be repeating constantly
         // archerDeathCountdown.stop();
       } else {
@@ -269,7 +275,7 @@ class ArcherPlayer extends SpriteAnimationGroupComponent with HasGameRef<MiniGam
     if(current != ArcherState.idle && current != ArcherState.attack && !isArcherRunning) {
       runSoundBmg.play("running.mp3");
       isArcherRunning = true;
-    } else if (current == ArcherState.idle || current == ArcherState.attack){
+    } else if (current == ArcherState.idle || current == ArcherState.attack || gameRef.miniGameBloc.state.flutterPage != 1){
       isArcherRunning = false;
       runSoundBmg.stop();
     }

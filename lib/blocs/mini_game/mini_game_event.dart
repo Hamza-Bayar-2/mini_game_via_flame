@@ -32,3 +32,17 @@ class ChangeDifficultyLevelEvent extends MiniGameEvent {}
 class SpacePressingEvent extends MiniGameEvent {}
 
 class NotSpacePressingEvent extends MiniGameEvent {}
+
+class GoToMainPage extends MiniGameEvent {}
+
+class GoToGamePage extends MiniGameEvent {}
+
+class GoToPausePage extends MiniGameEvent {}
+
+class GoToWinOrLosePage extends MiniGameEvent {}
+
+class NextGameStageEvent extends MiniGameEvent {}
+
+class ResetGameStageEvent extends MiniGameEvent {}
+
+class ChangeGameMode extends MiniGameEvent {}

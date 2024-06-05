@@ -2,6 +2,7 @@ import 'dart:html';
 
 import 'package:bloc/bloc.dart';
 import 'package:equatable/equatable.dart';
+import 'package:flame/game.dart';
 part 'mini_game_event.dart';
 part 'mini_game_state.dart';
 
@@ -44,9 +45,9 @@ class MiniGameBloc extends Bloc<MiniGameEvent, MiniGameState> {
     });
     on<ChangeDifficultyLevelEvent>((event, emit) {
       final newDifficulty = state.difficultyLevel + 1;
-      final newGoblinSpawnPeriod = state.goblinSpawnPeriod - 0.7;
+      final newGoblinSpawnPeriod = state.enemySpawnPeriod - 0.7;
       emit(state.copyWith(difficultyLevel: newDifficulty > 3 ? 1 : newDifficulty));
-      emit(state.copyWith(goblinSpawnPeriod: newDifficulty > 3 ? 2 : newGoblinSpawnPeriod));
+      emit(state.copyWith(enemySpawnPeriod: newDifficulty > 3 ? 2 : newGoblinSpawnPeriod));
     });
     on<SpacePressingEvent>((event, emit) {
       emit(state.copyWith(isSpaceKeyPressing: true));
@@ -54,5 +55,27 @@ class MiniGameBloc extends Bloc<MiniGameEvent, MiniGameState> {
     on<NotSpacePressingEvent>((event, emit) {
       emit(state.copyWith(isSpaceKeyPressing: false));
     });
-  }
+    on<GoToMainPage>((event, emit) {
+      emit(state.copyWith(flutterPage: 0));
+    });
+    on<GoToGamePage>((event, emit) {
+      emit(state.copyWith(flutterPage: 1));
+    });
+    on<GoToPausePage>((event, emit) {
+      emit(state.copyWith(flutterPage: 2));
+    });
+    on<GoToWinOrLosePage>((event, emit) {
+      emit(state.copyWith(flutterPage: 3));
+    });
+    on<NextGameStageEvent>((event, emit) {
+      emit(state.copyWith(gameStage: state.gameStage + 1));
+    });
+    on<ResetGameStageEvent>((event, emit) {
+      emit(state.copyWith(gameStage: 1));
+    });
+    on<ChangeGameMode>((event, emit) {
+      final newGameMode = state.gameMode + 1;
+      emit(state.copyWith(gameMode: newGameMode > 1 ? 0 : newGameMode));
+    });
+  } 
 }

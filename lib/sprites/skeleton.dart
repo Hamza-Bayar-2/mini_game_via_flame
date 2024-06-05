@@ -2,30 +2,29 @@ import 'dart:async';
 import 'package:flame/collisions.dart';
 import 'package:flame/components.dart';
 import 'package:flame_audio/flame_audio.dart';
-import 'package:flutter/material.dart';
 import 'package:mini_game_via_flame/flame_layer/mini_game.dart';
 import 'package:mini_game_via_flame/sprites/archer.dart';
 import 'package:mini_game_via_flame/sprites/arrow.dart';
 
-enum GoblinState {run, death, attack}
+enum SkeletonState {run, death, attack}
 
-class Goblin extends SpriteAnimationGroupComponent with HasGameRef<MiniGame>, CollisionCallbacks{
+class Skeleton extends SpriteAnimationGroupComponent with HasGameRef<MiniGame>, CollisionCallbacks{
   bool isSpawnRight;
-  Goblin({
+  Skeleton({
     Vector2? position,
     Vector2? size,
     Anchor anchor = Anchor.center,
     required this.isSpawnRight
   }) : super(position: position, size: size, anchor: anchor);
 
-  double goblinSpeed = 150;
-  bool isGoblinFacingRight = true;
+  double skeletonSpeed = 120;
+  bool isSkeletonFacingRight = true;
   bool isDying = false;
-  final Timer goblinDeathTimer = Timer(0.39);
-  final rectangleHitbox = RectangleHitbox.relative(parentSize: Vector2.all(280), Vector2(0.15, 0.22), position: Vector2(120, 124));
+  final Timer skeletonDeathTimer = Timer(0.39);
+  final rectangleHitbox = RectangleHitbox.relative(parentSize: Vector2.all(280), Vector2(0.15, 0.33), position: Vector2(120, 95));
 
   @override
-  Future<void> onLoad() async{
+  FutureOr<void> onLoad() {
     _loadAnimation();
     add(rectangleHitbox);
     return super.onLoad();
@@ -33,23 +32,23 @@ class Goblin extends SpriteAnimationGroupComponent with HasGameRef<MiniGame>, Co
 
   @override
   void update(double dt) { 
-
+    
     if(gameRef.miniGameBloc.state.isArcherDead) {
       removeFromParent();
     }
-    
-    if(isDying || gameRef.miniGameBloc.state.isArcherDead || gameRef.miniGameBloc.state.gameStage != 1) {
+
+    if(isDying || gameRef.miniGameBloc.state.isArcherDead || gameRef.miniGameBloc.state.gameStage != 4) {
       rectangleHitbox.removeFromParent();
-      goblinDeathTimer.resume();
-      goblinDeathTimer.update(dt);
-      current = GoblinState.death;
-      if(goblinDeathTimer.finished){
+      skeletonDeathTimer.resume();
+      skeletonDeathTimer.update(dt);
+      current = SkeletonState.death;
+      if(skeletonDeathTimer.finished){
         removeFromParent();
-        goblinDeathTimer.stop();
+        skeletonDeathTimer.stop();
       }
     } else {
 
-      _goblinSpawner(dt);
+      _skeletonSpawner(dt);
 
     }
 
@@ -70,20 +69,20 @@ class Goblin extends SpriteAnimationGroupComponent with HasGameRef<MiniGame>, Co
   
   void _loadAnimation() {
     double time = 0.1;
-    final runAnimation = _spriteAnimation(goblinState: "Run", frameAmount: 8, stepTime: time);
-    final deathAnimation = _spriteAnimation(goblinState: "Death", frameAmount: 4, stepTime: time);
-    final attackAnimation = _spriteAnimation(goblinState: "Attack", frameAmount: 8, stepTime: time);
+    final runAnimation = _spriteAnimation(skeletonState: "Walk", frameAmount: 4, stepTime: time * 1.5);
+    final deathAnimation = _spriteAnimation(skeletonState: "Death", frameAmount: 4, stepTime: time);
+    final attackAnimation = _spriteAnimation(skeletonState: "Attack", frameAmount: 8, stepTime: time);
 
     animations = {
-      GoblinState.run: runAnimation,
-      GoblinState.death: deathAnimation,
-      GoblinState.attack: attackAnimation,
+      SkeletonState.run: runAnimation,
+      SkeletonState.death: deathAnimation,
+      SkeletonState.attack: attackAnimation,
     };
   }
 
-  SpriteAnimation _spriteAnimation({required String goblinState, required int frameAmount, required double stepTime}) {
+  SpriteAnimation _spriteAnimation({required String skeletonState, required int frameAmount, required double stepTime}) {
     return SpriteAnimation.fromFrameData(
-      gameRef.images.fromCache("Enemies/Goblin/$goblinState.png"),
+      gameRef.images.fromCache("Enemies/Skeleton/$skeletonState.png"),
       SpriteAnimationData.sequenced(
         amount: frameAmount,
         stepTime: stepTime,
@@ -92,28 +91,28 @@ class Goblin extends SpriteAnimationGroupComponent with HasGameRef<MiniGame>, Co
     );
   }
   
-  void _goblinSpawner(double dt) {
+  void _skeletonSpawner(double dt) {
     Vector2 velocity = Vector2.zero();  
     double directionX = 0.0;
 
     if(isSpawnRight) {
-      directionX -= goblinSpeed;  
-      if(isGoblinFacingRight){
+      directionX -= skeletonSpeed;  
+      if(isSkeletonFacingRight){
         flipHorizontallyAroundCenter();
-        isGoblinFacingRight = false;
+        isSkeletonFacingRight = false;
       }
-      current = GoblinState.run;
+      current = SkeletonState.run;
 
       if(position.x < 0) {
       removeFromParent(); 
     }
     } else {
-      directionX += goblinSpeed;
-      if(!isGoblinFacingRight){
+      directionX += skeletonSpeed;
+      if(!isSkeletonFacingRight){
         flipHorizontallyAroundCenter();
-        isGoblinFacingRight = true;
+        isSkeletonFacingRight = true;
       }
-      current = GoblinState.run;
+      current = SkeletonState.run;
 
       if(position.x > gameRef.size.x) {
         removeFromParent(); 

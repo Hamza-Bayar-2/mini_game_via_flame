@@ -1,4 +1,3 @@
-import 'dart:html';
 
 import 'package:flame/components.dart';
 import 'package:flame/events.dart';
@@ -6,17 +5,22 @@ import 'package:flame/game.dart';
 import 'package:flame_audio/bgm.dart';
 import 'package:flame_audio/flame_audio.dart';
 import 'package:flame_bloc/flame_bloc.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter/src/services/keyboard_key.g.dart';
 import 'package:flutter/src/services/raw_keyboard.dart';
 import 'package:flutter/src/widgets/focus_manager.dart';
+import 'package:flutter/widgets.dart';
 import 'package:mini_game_via_flame/blocs/mini_game/mini_game_bloc.dart';
 import 'package:mini_game_via_flame/sprites/archer.dart';
 import 'package:mini_game_via_flame/sprites/arrow.dart';
+import 'package:mini_game_via_flame/sprites/flyingEye.dart';
 import 'dart:async';
 import 'package:mini_game_via_flame/sprites/goblin.dart';
 import 'package:flame/experimental.dart';
 import 'package:flame/input.dart';
 import 'package:mini_game_via_flame/sprites/heart.dart';
+import 'package:mini_game_via_flame/sprites/mushroom.dart';
+import 'package:mini_game_via_flame/sprites/skeleton.dart';
 
 class MiniGame extends FlameGame with HasKeyboardHandlerComponents, TapCallbacks, DragCallbacks, HasCollisionDetection{
   final MiniGameBloc miniGameBloc;
@@ -30,8 +34,8 @@ class MiniGame extends FlameGame with HasKeyboardHandlerComponents, TapCallbacks
   late Bgm backgroundMusic = FlameAudio.bgmFactory(audioCache: FlameAudio.audioCache); 
   final double heartSpawnPeriod = 8;
   late SpawnComponent heartSpawner;
-  late SpawnComponent goblinSpawner1;
-  late SpawnComponent goblinSpawner2;
+  late SpawnComponent enemySpawner1;
+  late SpawnComponent enemySpawner2;
   late bool wasArcherDead = miniGameBloc.state.isArcherDead;
   late int previousDifficultyLevel = miniGameBloc.state.difficultyLevel;
   
@@ -39,7 +43,7 @@ class MiniGame extends FlameGame with HasKeyboardHandlerComponents, TapCallbacks
 
   @override
   Future<void> onLoad() async{
-    await FlameAudio.audioCache.loadAll(['running.mp3', 'arrow.mp3', 'death.mp3', 'hurt.mp3', 'monsterDeath.mp3', 'bgm.mp3', 'powerUp.mp3']);
+    await FlameAudio.audioCache.loadAll(['running.mp3', 'arrow.mp3', 'death.mp3', 'hurt.mp3', 'monsterDeath.mp3', 'bgm.mp3', 'powerUp.mp3', 'win.mp3', 'lose.mp3']);
     await images.loadAllImages();
     background = Sprite(images.fromCache("background.png"));
     archerPlayer = ArcherPlayer();
@@ -47,16 +51,24 @@ class MiniGame extends FlameGame with HasKeyboardHandlerComponents, TapCallbacks
     add(FlameBlocProvider.value(value: miniGameBloc, children: [archerPlayer]));
 
     heartSpawner = _heartCreater();
-    goblinSpawner1 = _goblinCreater(true, Vector2.all(280), size.x);
-    goblinSpawner2 = _goblinCreater(false, Vector2.all(280), 0);
+    enemySpawner1 = _enemyCreater(true, Vector2.all(280), size.x);
+    enemySpawner2 = _enemyCreater(false, Vector2.all(280), 0);
     
-    addAll({heartSpawner, goblinSpawner1, goblinSpawner2});
-
+    addAll({heartSpawner, enemySpawner1, enemySpawner2});
     return super.onLoad();
   }
 
   @override
-  void update(double dt) {
+  Future<void> update(double dt) async {
+    
+    if(miniGameBloc.state.flutterPage == 0 || miniGameBloc.state.flutterPage == 2) {
+      // 0 => main page - 2 => pause page
+      pauseEngine();
+    } else if (miniGameBloc.state.flutterPage == 3) { 
+      // 3 => win or lose page
+      pauseEngine();
+    }
+
     if((miniGameBloc.state.isSpaceKeyPressing || miniGameBloc.state.isTapingDown) && !miniGameBloc.state.isArcherDead) {
       countdownAndRepeat.update(dt);
       countdownAndRepeat.resume();
@@ -70,15 +82,10 @@ class MiniGame extends FlameGame with HasKeyboardHandlerComponents, TapCallbacks
       countdownAndRepeat.stop();
     } 
 
-    if(miniGameBloc.state.isArcherDead) {
-      backgroundMusic.pause();
-    } else if(!backgroundMusic.isPlaying) {
-      backgroundMusic.play("bgm.mp3", volume: 0.2);
-      backgroundMusic.resume();
-    }
-
+    _gameStageManager();
+    _backgroundMusicManager();
     _removeComponentWhenArcherDeadAndAddComponentWhenArcherRevive();
-    _goblinSpawnPeriodChanger();
+    _enemySpawnPeriodChanger();
     super.update(dt);
   }
 
@@ -86,6 +93,10 @@ class MiniGame extends FlameGame with HasKeyboardHandlerComponents, TapCallbacks
   KeyEventResult onKeyEvent(RawKeyEvent event, Set<LogicalKeyboardKey> keysPressed) {
     if(keysPressed.contains(LogicalKeyboardKey.space)) {
       miniGameBloc.add(SpacePressingEvent());
+      if(!miniGameBloc.state.isArcherDead && miniGameBloc.state.flutterPage != 3) {
+        miniGameBloc.add(GoToGamePage());
+        resumeEngine();
+      }
     } else {
       miniGameBloc.add(NotSpacePressingEvent());
     }
@@ -94,10 +105,6 @@ class MiniGame extends FlameGame with HasKeyboardHandlerComponents, TapCallbacks
 
   @override
   void onTapDown(TapDownEvent event) {
-    print("tapdown");
-    if(!backgroundMusic.isPlaying){
-      backgroundMusic.play("bgm.mp3", volume: 0.2);
-    }
     // by this event the isTapingDown bool variable is changing to true
     miniGameBloc.add(TapingEvent());
     super.onTapDown(event);
@@ -152,14 +159,29 @@ class MiniGame extends FlameGame with HasKeyboardHandlerComponents, TapCallbacks
     );
   }
 
-  SpawnComponent _goblinCreater(bool isSpawnRight, Vector2 vector2, double positionX) {
+  SpawnComponent _enemyCreater(bool isSpawnRight, Vector2 enemySize, double positionX) {
     return SpawnComponent(
         factory: (index) {
-          return Goblin(isSpawnRight: isSpawnRight, size: vector2);
+          return _enemyPickerForEnemyCreaterMethod(isSpawnRight, enemySize);
         },
-        period: miniGameBloc.state.goblinSpawnPeriod,
+        period: miniGameBloc.state.enemySpawnPeriod,
         area: Rectangle.fromLTWH(positionX, 0, 0, size.y),
-      );
+    );
+  }
+
+  dynamic _enemyPickerForEnemyCreaterMethod(bool isSpawnRight, Vector2 enemySize) {
+    if(miniGameBloc.state.gameStage == 1) {
+      return Goblin(isSpawnRight: isSpawnRight, size: enemySize);
+    } else if(miniGameBloc.state.gameStage == 2) {
+      return Mushroom(isSpawnRight: isSpawnRight, size: enemySize);
+    } else if(miniGameBloc.state.gameStage == 3) {
+      return FlyingEye(isSpawnRight: isSpawnRight, size: enemySize);
+    } else if(miniGameBloc.state.gameStage == 4) {
+      return Skeleton(isSpawnRight: isSpawnRight, size: enemySize);
+    } 
+    else {
+      return Goblin(isSpawnRight: isSpawnRight, size: enemySize);
+    }
   }
 
   SpawnComponent _heartCreater() {
@@ -169,7 +191,7 @@ class MiniGame extends FlameGame with HasKeyboardHandlerComponents, TapCallbacks
         return Heart(animation: _heartAnimation(), anchor: Anchor.center);
       },
       period: heartSpawnPeriod,
-      area: Rectangle.fromLTWH(0, 0, size.x, size.y),
+      area: Rectangle.fromLTWH(size.x / 12, size.y / 12, size.x * 0.8, size.y * 0.8),
     );
   }
 
@@ -188,31 +210,88 @@ class MiniGame extends FlameGame with HasKeyboardHandlerComponents, TapCallbacks
 
     if(miniGameBloc.state.isArcherDead && !wasArcherDead){
       heartSpawner.removeFromParent();
-      goblinSpawner1.removeFromParent();
-      goblinSpawner2.removeFromParent();
+      enemySpawner1.removeFromParent();
+      enemySpawner2.removeFromParent();
     } else if (!miniGameBloc.state.isArcherDead && wasArcherDead){
       heartSpawner = _heartCreater();
-      goblinSpawner1 = _goblinCreater(true, Vector2.all(280), size.x);
-      goblinSpawner2 = _goblinCreater(false, Vector2.all(280), 0);
+      enemySpawner1 = _enemyCreater(true, Vector2.all(280), size.x);
+      enemySpawner2 = _enemyCreater(false, Vector2.all(280), 0);
 
-      addAll({heartSpawner, goblinSpawner1, goblinSpawner2});
+      addAll({heartSpawner, enemySpawner1, enemySpawner2});
     }
 
     wasArcherDead = miniGameBloc.state.isArcherDead;
   }
 
-  void _goblinSpawnPeriodChanger() {
+  void _enemySpawnPeriodChanger() {
     if(miniGameBloc.state.difficultyLevel != previousDifficultyLevel && !miniGameBloc.state.isArcherDead) {
-      goblinSpawner1.removeFromParent();
-      goblinSpawner2.removeFromParent();
+      enemySpawner1.removeFromParent();
+      enemySpawner2.removeFromParent();
 
-      goblinSpawner1 = _goblinCreater(true, Vector2.all(280), size.x);
-      goblinSpawner2 = _goblinCreater(false, Vector2.all(280), 0);
+      enemySpawner1 = _enemyCreater(true, Vector2.all(280), size.x,);
+      enemySpawner2 = _enemyCreater(false, Vector2.all(280), 0);
 
-      addAll({goblinSpawner1, goblinSpawner2});
+      addAll({enemySpawner1, enemySpawner2});
     }
 
     previousDifficultyLevel = miniGameBloc.state.difficultyLevel;
   }
 
+  void _backgroundMusicManager() {
+
+    if(miniGameBloc.state.flutterPage != 1 || miniGameBloc.state.isArcherDead) {
+      backgroundMusic.pause();
+    } else if(!backgroundMusic.isPlaying) {
+      backgroundMusic.play("bgm.mp3", volume: 0.2);
+      backgroundMusic.resume();
+    }
+  }
+
+  void _gameStageManager() {
+    if(miniGameBloc.state.monsterKillNumber == 10 && miniGameBloc.state.gameStage == 1) {
+      // game stage will be 2
+      miniGameBloc.add(NextGameStageEvent());
+      enemySpawner1.removeFromParent();
+      enemySpawner2.removeFromParent();
+      
+      enemySpawner1 = _enemyCreater(true, Vector2.all(280), size.x,);
+      enemySpawner2 = _enemyCreater(false, Vector2.all(280), 0);
+
+      addAll({enemySpawner1, enemySpawner2});
+    } else if(miniGameBloc.state.monsterKillNumber == 20 && miniGameBloc.state.gameStage == 2) {
+      // game stage will be 3
+      miniGameBloc.add(NextGameStageEvent());
+      enemySpawner1.removeFromParent();
+      enemySpawner2.removeFromParent();
+      
+      enemySpawner1 = _enemyCreater(true, Vector2.all(280), size.x,);
+      enemySpawner2 = _enemyCreater(false, Vector2.all(280), 0);
+
+      addAll({enemySpawner1, enemySpawner2});
+    } else if(miniGameBloc.state.monsterKillNumber == 30 && miniGameBloc.state.gameStage == 3) {
+      // game stage will be 4 (final stage)
+      miniGameBloc.add(NextGameStageEvent());
+      enemySpawner1.removeFromParent();
+      enemySpawner2.removeFromParent();
+      
+      enemySpawner1 = _enemyCreater(true, Vector2.all(280), size.x,);
+      enemySpawner2 = _enemyCreater(false, Vector2.all(280), 0);
+
+      addAll({enemySpawner1, enemySpawner2});
+    } else if(miniGameBloc.state.monsterKillNumber == 40 && miniGameBloc.state.gameStage == 4) {
+      // game stage will be reset to 1 
+      miniGameBloc.add(ResetGameStageEvent());
+      enemySpawner1.removeFromParent();
+      enemySpawner2.removeFromParent();
+
+      // I add the spawnres again so when the player starts playing again the monsters continuo spawning
+      enemySpawner1 = _enemyCreater(true, Vector2.all(280), size.x,);
+      enemySpawner2 = _enemyCreater(false, Vector2.all(280), 0);
+
+      addAll({enemySpawner1, enemySpawner2});
+      // The player completed all 4 stages and won the game flutterPage => 3
+      FlameAudio.play("win.mp3", volume: 0.5);
+      miniGameBloc.add(GoToWinOrLosePage());
+    }
+  }
 }

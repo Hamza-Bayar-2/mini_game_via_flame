@@ -2,30 +2,29 @@ import 'dart:async';
 import 'package:flame/collisions.dart';
 import 'package:flame/components.dart';
 import 'package:flame_audio/flame_audio.dart';
-import 'package:flutter/material.dart';
 import 'package:mini_game_via_flame/flame_layer/mini_game.dart';
 import 'package:mini_game_via_flame/sprites/archer.dart';
 import 'package:mini_game_via_flame/sprites/arrow.dart';
 
-enum GoblinState {run, death, attack}
+enum MushroomState {run, death, attack}
 
-class Goblin extends SpriteAnimationGroupComponent with HasGameRef<MiniGame>, CollisionCallbacks{
+class Mushroom extends SpriteAnimationGroupComponent with HasGameRef<MiniGame>, CollisionCallbacks{
   bool isSpawnRight;
-  Goblin({
+  Mushroom({
     Vector2? position,
     Vector2? size,
     Anchor anchor = Anchor.center,
     required this.isSpawnRight
   }) : super(position: position, size: size, anchor: anchor);
 
-  double goblinSpeed = 150;
-  bool isGoblinFacingRight = true;
+  double mushroomSpeed = 170;
+  bool isMushroomFacingRight = true;
   bool isDying = false;
-  final Timer goblinDeathTimer = Timer(0.39);
-  final rectangleHitbox = RectangleHitbox.relative(parentSize: Vector2.all(280), Vector2(0.15, 0.22), position: Vector2(120, 124));
+  final Timer mushroomDeathTimer = Timer(0.39);
+  final rectangleHitbox = RectangleHitbox.relative(parentSize: Vector2.all(280), Vector2(0.15, 0.25), position: Vector2(120, 115));
 
   @override
-  Future<void> onLoad() async{
+  FutureOr<void> onLoad() {
     _loadAnimation();
     add(rectangleHitbox);
     return super.onLoad();
@@ -33,30 +32,30 @@ class Goblin extends SpriteAnimationGroupComponent with HasGameRef<MiniGame>, Co
 
   @override
   void update(double dt) { 
-
+    
     if(gameRef.miniGameBloc.state.isArcherDead) {
       removeFromParent();
     }
-    
-    if(isDying || gameRef.miniGameBloc.state.isArcherDead || gameRef.miniGameBloc.state.gameStage != 1) {
+
+    if(isDying || gameRef.miniGameBloc.state.isArcherDead || gameRef.miniGameBloc.state.gameStage != 2) {
       rectangleHitbox.removeFromParent();
-      goblinDeathTimer.resume();
-      goblinDeathTimer.update(dt);
-      current = GoblinState.death;
-      if(goblinDeathTimer.finished){
+      mushroomDeathTimer.resume();
+      mushroomDeathTimer.update(dt);
+      current = MushroomState.death;
+      if(mushroomDeathTimer.finished){
         removeFromParent();
-        goblinDeathTimer.stop();
+        mushroomDeathTimer.stop();
       }
     } else {
 
-      _goblinSpawner(dt);
+      _mushroomSpawner(dt);
 
     }
 
     super.update(dt);
   }
 
-  @override
+    @override
   void onCollision(Set<Vector2> intersectionPoints, PositionComponent other) {
     if(other is Arrow && !isDying){
       isDying = true;
@@ -67,23 +66,23 @@ class Goblin extends SpriteAnimationGroupComponent with HasGameRef<MiniGame>, Co
     }
     super.onCollision(intersectionPoints, other);
   }
-  
+
   void _loadAnimation() {
     double time = 0.1;
-    final runAnimation = _spriteAnimation(goblinState: "Run", frameAmount: 8, stepTime: time);
-    final deathAnimation = _spriteAnimation(goblinState: "Death", frameAmount: 4, stepTime: time);
-    final attackAnimation = _spriteAnimation(goblinState: "Attack", frameAmount: 8, stepTime: time);
+    final runAnimation = _spriteAnimation(mushroomState: "Run", frameAmount: 8, stepTime: time);
+    final deathAnimation = _spriteAnimation(mushroomState: "Death", frameAmount: 4, stepTime: time);
+    final attackAnimation = _spriteAnimation(mushroomState: "Attack", frameAmount: 8, stepTime: time);
 
     animations = {
-      GoblinState.run: runAnimation,
-      GoblinState.death: deathAnimation,
-      GoblinState.attack: attackAnimation,
+      MushroomState.run: runAnimation,
+      MushroomState.death: deathAnimation,
+      MushroomState.attack: attackAnimation,
     };
   }
 
-  SpriteAnimation _spriteAnimation({required String goblinState, required int frameAmount, required double stepTime}) {
+  SpriteAnimation _spriteAnimation({required String mushroomState, required int frameAmount, required double stepTime}) {
     return SpriteAnimation.fromFrameData(
-      gameRef.images.fromCache("Enemies/Goblin/$goblinState.png"),
+      gameRef.images.fromCache("Enemies/Mushroom/$mushroomState.png"),
       SpriteAnimationData.sequenced(
         amount: frameAmount,
         stepTime: stepTime,
@@ -91,29 +90,29 @@ class Goblin extends SpriteAnimationGroupComponent with HasGameRef<MiniGame>, Co
       ),
     );
   }
-  
-  void _goblinSpawner(double dt) {
+
+  void _mushroomSpawner(double dt) {
     Vector2 velocity = Vector2.zero();  
     double directionX = 0.0;
 
     if(isSpawnRight) {
-      directionX -= goblinSpeed;  
-      if(isGoblinFacingRight){
+      directionX -= mushroomSpeed;  
+      if(isMushroomFacingRight){
         flipHorizontallyAroundCenter();
-        isGoblinFacingRight = false;
+        isMushroomFacingRight = false;
       }
-      current = GoblinState.run;
+      current = MushroomState.run;
 
       if(position.x < 0) {
       removeFromParent(); 
     }
     } else {
-      directionX += goblinSpeed;
-      if(!isGoblinFacingRight){
+      directionX += mushroomSpeed;
+      if(!isMushroomFacingRight){
         flipHorizontallyAroundCenter();
-        isGoblinFacingRight = true;
+        isMushroomFacingRight = true;
       }
-      current = GoblinState.run;
+      current = MushroomState.run;
 
       if(position.x > gameRef.size.x) {
         removeFromParent(); 

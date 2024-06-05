@@ -27,6 +27,10 @@ class Heart extends SpriteAnimationComponent with HasGameRef<MiniGame>, Collisio
   @override
   void update(double dt) {
 
+    if(gameRef.miniGameBloc.state.isArcherDead){
+      removeFromParent();
+    }
+
     _heartDisappear(dt);
 
     super.update(dt);
@@ -50,8 +54,4 @@ class Heart extends SpriteAnimationComponent with HasGameRef<MiniGame>, Collisio
       removeFromParent();
     }
   }
-
-
-
-
 }

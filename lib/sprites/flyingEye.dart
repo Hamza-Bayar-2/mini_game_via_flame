@@ -2,30 +2,31 @@ import 'dart:async';
 import 'package:flame/collisions.dart';
 import 'package:flame/components.dart';
 import 'package:flame_audio/flame_audio.dart';
-import 'package:flutter/material.dart';
 import 'package:mini_game_via_flame/flame_layer/mini_game.dart';
 import 'package:mini_game_via_flame/sprites/archer.dart';
 import 'package:mini_game_via_flame/sprites/arrow.dart';
 
-enum GoblinState {run, death, attack}
+enum FlyingEyeState {run, death, attack}
 
-class Goblin extends SpriteAnimationGroupComponent with HasGameRef<MiniGame>, CollisionCallbacks{
+class FlyingEye extends SpriteAnimationGroupComponent with HasGameRef<MiniGame>, CollisionCallbacks{
   bool isSpawnRight;
-  Goblin({
+  FlyingEye({
     Vector2? position,
     Vector2? size,
     Anchor anchor = Anchor.center,
     required this.isSpawnRight
   }) : super(position: position, size: size, anchor: anchor);
 
-  double goblinSpeed = 150;
-  bool isGoblinFacingRight = true;
+  double flyingEyeSpeed = 150;
+  bool isFlyingEyeFacingRight = true;
   bool isDying = false;
-  final Timer goblinDeathTimer = Timer(0.39);
-  final rectangleHitbox = RectangleHitbox.relative(parentSize: Vector2.all(280), Vector2(0.15, 0.22), position: Vector2(120, 124));
+  // the timer is a bit less than the death time, 
+  // because the death animation repeats a bit
+  final Timer flyingEyeDeathTimer = Timer(0.39);
+  final rectangleHitbox = RectangleHitbox.relative(parentSize: Vector2.all(280), Vector2(0.22, 0.15), position: Vector2(115, 124));
 
   @override
-  Future<void> onLoad() async{
+  Future<void> onLoad() async {
     _loadAnimation();
     add(rectangleHitbox);
     return super.onLoad();
@@ -33,23 +34,23 @@ class Goblin extends SpriteAnimationGroupComponent with HasGameRef<MiniGame>, Co
 
   @override
   void update(double dt) { 
-
+    
     if(gameRef.miniGameBloc.state.isArcherDead) {
       removeFromParent();
     }
-    
-    if(isDying || gameRef.miniGameBloc.state.isArcherDead || gameRef.miniGameBloc.state.gameStage != 1) {
+
+    if(isDying || gameRef.miniGameBloc.state.isArcherDead || gameRef.miniGameBloc.state.gameStage != 3) {
       rectangleHitbox.removeFromParent();
-      goblinDeathTimer.resume();
-      goblinDeathTimer.update(dt);
-      current = GoblinState.death;
-      if(goblinDeathTimer.finished){
+      flyingEyeDeathTimer.resume();
+      flyingEyeDeathTimer.update(dt);
+      current = FlyingEyeState.death;
+      if(flyingEyeDeathTimer.finished){
         removeFromParent();
-        goblinDeathTimer.stop();
+        flyingEyeDeathTimer.stop();
       }
     } else {
 
-      _goblinSpawner(dt);
+      _flyingEyeSpawner(dt);
 
     }
 
@@ -70,20 +71,20 @@ class Goblin extends SpriteAnimationGroupComponent with HasGameRef<MiniGame>, Co
   
   void _loadAnimation() {
     double time = 0.1;
-    final runAnimation = _spriteAnimation(goblinState: "Run", frameAmount: 8, stepTime: time);
-    final deathAnimation = _spriteAnimation(goblinState: "Death", frameAmount: 4, stepTime: time);
-    final attackAnimation = _spriteAnimation(goblinState: "Attack", frameAmount: 8, stepTime: time);
+    final runAnimation = _spriteAnimation(flyingEyeState: "Flight", frameAmount: 8, stepTime: time);
+    final deathAnimation = _spriteAnimation(flyingEyeState: "Death", frameAmount: 4, stepTime: time);
+    final attackAnimation = _spriteAnimation(flyingEyeState: "Attack", frameAmount: 8, stepTime: time);
 
     animations = {
-      GoblinState.run: runAnimation,
-      GoblinState.death: deathAnimation,
-      GoblinState.attack: attackAnimation,
+      FlyingEyeState.run: runAnimation,
+      FlyingEyeState.death: deathAnimation,
+      FlyingEyeState.attack: attackAnimation,
     };
   }
 
-  SpriteAnimation _spriteAnimation({required String goblinState, required int frameAmount, required double stepTime}) {
+  SpriteAnimation _spriteAnimation({required String flyingEyeState, required int frameAmount, required double stepTime}) {
     return SpriteAnimation.fromFrameData(
-      gameRef.images.fromCache("Enemies/Goblin/$goblinState.png"),
+      gameRef.images.fromCache("Enemies/Flying eye/$flyingEyeState.png"),
       SpriteAnimationData.sequenced(
         amount: frameAmount,
         stepTime: stepTime,
@@ -92,28 +93,28 @@ class Goblin extends SpriteAnimationGroupComponent with HasGameRef<MiniGame>, Co
     );
   }
   
-  void _goblinSpawner(double dt) {
+  void _flyingEyeSpawner(double dt) {
     Vector2 velocity = Vector2.zero();  
     double directionX = 0.0;
 
     if(isSpawnRight) {
-      directionX -= goblinSpeed;  
-      if(isGoblinFacingRight){
+      directionX -= flyingEyeSpeed;  
+      if(isFlyingEyeFacingRight){
         flipHorizontallyAroundCenter();
-        isGoblinFacingRight = false;
+        isFlyingEyeFacingRight = false;
       }
-      current = GoblinState.run;
+      current = FlyingEyeState.run;
 
       if(position.x < 0) {
       removeFromParent(); 
     }
     } else {
-      directionX += goblinSpeed;
-      if(!isGoblinFacingRight){
+      directionX += flyingEyeSpeed;
+      if(!isFlyingEyeFacingRight){
         flipHorizontallyAroundCenter();
-        isGoblinFacingRight = true;
+        isFlyingEyeFacingRight = true;
       }
-      current = GoblinState.run;
+      current = FlyingEyeState.run;
 
       if(position.x > gameRef.size.x) {
         removeFromParent(); 

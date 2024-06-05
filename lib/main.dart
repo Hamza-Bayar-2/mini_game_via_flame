@@ -20,11 +20,17 @@ class MiniGameApp extends StatelessWidget {
     return MaterialApp(
       theme: ThemeData(
           textTheme: const TextTheme(
-              bodyMedium: TextStyle(color: Colors.blue, fontSize: 30)),
-              textButtonTheme: TextButtonThemeData(style: TextButton.styleFrom(
+              bodyMedium: TextStyle(color: Colors.white, fontSize: 30)),
+              textButtonTheme: TextButtonThemeData(
+                style: TextButton.styleFrom(
                 backgroundColor: Colors.blueAccent,
                 foregroundColor: Colors.white,
                 textStyle: const TextStyle(fontSize: 30,),
+              )),
+              iconButtonTheme: IconButtonThemeData(
+                style: IconButton.styleFrom(
+                  foregroundColor: Colors.white,
+                iconSize: 24, 
               ))
               ),
       debugShowCheckedModeBanner: true,
