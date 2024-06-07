@@ -1,8 +1,8 @@
 import 'dart:async';
 import 'package:flame/collisions.dart';
 import 'package:flame/components.dart';
+import 'package:flame/text.dart';
 import 'package:flame_audio/flame_audio.dart';
-import 'package:flutter/material.dart';
 import 'package:mini_game_via_flame/flame_layer/mini_game.dart';
 import 'package:mini_game_via_flame/sprites/archer.dart';
 import 'package:mini_game_via_flame/sprites/arrow.dart';
@@ -34,11 +34,14 @@ class Goblin extends SpriteAnimationGroupComponent with HasGameRef<MiniGame>, Co
   @override
   void update(double dt) { 
 
-    if(gameRef.miniGameBloc.state.isArcherDead) {
+    if(gameRef.miniGameBloc.state.isArcherDead || gameRef.miniGameBloc.state.isTheGameReset) {
       removeFromParent();
     }
     
-    if(isDying || gameRef.miniGameBloc.state.isArcherDead || gameRef.miniGameBloc.state.gameStage != 1) {
+    if(isDying || gameRef.miniGameBloc.state.gameStage != 1) {
+
+      add(gameRef.bloodParticlesForMonsters(Vector2.all(150)));
+
       rectangleHitbox.removeFromParent();
       goblinDeathTimer.resume();
       goblinDeathTimer.update(dt);
@@ -59,6 +62,7 @@ class Goblin extends SpriteAnimationGroupComponent with HasGameRef<MiniGame>, Co
   @override
   void onCollision(Set<Vector2> intersectionPoints, PositionComponent other) {
     if(other is Arrow && !isDying){
+      // this will add blood particle when the monster get hit
       isDying = true;
       FlameAudio.play("monsterDeath.mp3");
     } 

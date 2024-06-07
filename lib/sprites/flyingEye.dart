@@ -35,11 +35,14 @@ class FlyingEye extends SpriteAnimationGroupComponent with HasGameRef<MiniGame>,
   @override
   void update(double dt) { 
     
-    if(gameRef.miniGameBloc.state.isArcherDead) {
+    if(gameRef.miniGameBloc.state.isArcherDead || gameRef.miniGameBloc.state.isTheGameReset) {
       removeFromParent();
     }
 
-    if(isDying || gameRef.miniGameBloc.state.isArcherDead || gameRef.miniGameBloc.state.gameStage != 3) {
+    if(isDying || gameRef.miniGameBloc.state.gameStage != 3) {
+
+      add(gameRef.bloodParticlesForMonsters(Vector2.all(150)));
+
       rectangleHitbox.removeFromParent();
       flyingEyeDeathTimer.resume();
       flyingEyeDeathTimer.update(dt);

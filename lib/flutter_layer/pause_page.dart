@@ -45,6 +45,17 @@ class PausePage extends StatelessWidget {
                   }, 
                   child: Text("Change Difficulty : ${state.difficultyLevel}")
                 ),
+                const SizedBox(height: 10,),
+                IconButton(
+                  onPressed: () {
+                    context.read<MiniGameBloc>().add(ResetAllGameEvent());
+                  }, 
+                  icon: const Icon(
+                    Icons.exit_to_app_outlined,
+                    color: Colors.red,
+                    size: 35,
+                  )
+                )
               ],
             ),
           ),

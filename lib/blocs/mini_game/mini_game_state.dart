@@ -20,12 +20,13 @@ class MiniGameState extends Equatable {
   final int gameStage;
   // there are 2 game mode (0 => finite mode, 1 => kill mode)
   final int gameMode;
+  final bool isTheGameReset;
 
-  const MiniGameState({required this.isTapingDown, required this.archerHelth, required this.isPlayerFacingRight, required this.isArcherDead, required this.isGameGoingOn, required this.monsterKillNumber, required this.difficultyLevel, required this.enemySpawnPeriod, required this.isSpaceKeyPressing, required this.flutterPage, required this.gameStage, required this.gameMode});
+  const MiniGameState({required this.isTapingDown, required this.archerHelth, required this.isPlayerFacingRight, required this.isArcherDead, required this.isGameGoingOn, required this.monsterKillNumber, required this.difficultyLevel, required this.enemySpawnPeriod, required this.isSpaceKeyPressing, required this.flutterPage, required this.gameStage, required this.gameMode, required this.isTheGameReset});
   
-  factory MiniGameState.initial() => const MiniGameState(isTapingDown: false, archerHelth: 100, isPlayerFacingRight: true, isArcherDead: false, isGameGoingOn: true, monsterKillNumber: 0, difficultyLevel: 1, enemySpawnPeriod: 2, isSpaceKeyPressing: false, flutterPage: 0, gameStage: 1, gameMode: 0);
+  factory MiniGameState.initial() => const MiniGameState(isTapingDown: false, archerHelth: 100, isPlayerFacingRight: true, isArcherDead: false, isGameGoingOn: true, monsterKillNumber: 0, difficultyLevel: 1, enemySpawnPeriod: 2, isSpaceKeyPressing: false, flutterPage: 0, gameStage: 1, gameMode: 0, isTheGameReset: false);
 
-  MiniGameState copyWith({bool? isTapingDown, int? archerHelth, bool? isPlayerFacingRight, bool? isArcherDead, bool? isGameGoingOn, int? monsterKillNumber, int? difficultyLevel, double? enemySpawnPeriod, bool? isSpaceKeyPressing, int? flutterPage, int? gameStage, int? gameMode}){
+  MiniGameState copyWith({bool? isTapingDown, int? archerHelth, bool? isPlayerFacingRight, bool? isArcherDead, bool? isGameGoingOn, int? monsterKillNumber, int? difficultyLevel, double? enemySpawnPeriod, bool? isSpaceKeyPressing, int? flutterPage, int? gameStage, int? gameMode, bool? isTheGameReset}){
     return MiniGameState(
       isTapingDown: isTapingDown ?? this.isTapingDown,
       archerHelth: archerHelth ?? this.archerHelth,
@@ -38,12 +39,13 @@ class MiniGameState extends Equatable {
       isSpaceKeyPressing: isSpaceKeyPressing ?? this.isSpaceKeyPressing,
       flutterPage: flutterPage ?? this.flutterPage,
       gameStage: gameStage ?? this.gameStage,
-      gameMode: gameMode ?? this.gameMode
+      gameMode: gameMode ?? this.gameMode,
+      isTheGameReset: isTheGameReset ?? this.isTheGameReset
     );
   }
 
   @override
-  List<Object> get props => [isTapingDown, archerHelth, isPlayerFacingRight, isArcherDead, isGameGoingOn, monsterKillNumber, difficultyLevel, enemySpawnPeriod, isSpaceKeyPressing, flutterPage, gameStage, gameMode];
+  List<Object> get props => [isTapingDown, archerHelth, isPlayerFacingRight, isArcherDead, isGameGoingOn, monsterKillNumber, difficultyLevel, enemySpawnPeriod, isSpaceKeyPressing, flutterPage, gameStage, gameMode, isTheGameReset];
 
   @override
   bool get stringify => true;

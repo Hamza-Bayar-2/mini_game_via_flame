@@ -77,5 +77,16 @@ class MiniGameBloc extends Bloc<MiniGameEvent, MiniGameState> {
       final newGameMode = state.gameMode + 1;
       emit(state.copyWith(gameMode: newGameMode > 1 ? 0 : newGameMode));
     });
+    on<ResetAllGameEvent>((event, emit) {
+      emit(state.copyWith(archerHelth: MiniGameState.initial().archerHelth));
+      emit(state.copyWith(isArcherDead: state.archerHelth <= 0));
+      emit(state.copyWith(monsterKillNumber: 0));
+      emit(state.copyWith(flutterPage: 0));
+      emit(state.copyWith(gameStage: 1));
+      emit(state.copyWith(isTheGameReset: true));
+    });
+    on<NotResetAllGameEvent>((event, emit) {
+      emit(state.copyWith(isTheGameReset: false));
+    });
   } 
 }

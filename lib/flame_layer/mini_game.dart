@@ -1,7 +1,10 @@
 
+import 'dart:math';
+
 import 'package:flame/components.dart';
 import 'package:flame/events.dart';
 import 'package:flame/game.dart';
+import 'package:flame/particles.dart';
 import 'package:flame_audio/bgm.dart';
 import 'package:flame_audio/flame_audio.dart';
 import 'package:flame_bloc/flame_bloc.dart';
@@ -32,7 +35,7 @@ class MiniGame extends FlameGame with HasKeyboardHandlerComponents, TapCallbacks
   // in the archer's attack animation. 
   final Timer countdownAndRepeat = Timer(0.72);
   late Bgm backgroundMusic = FlameAudio.bgmFactory(audioCache: FlameAudio.audioCache); 
-  final double heartSpawnPeriod = 8;
+  final double heartSpawnPeriod = 7.5;
   late SpawnComponent heartSpawner;
   late SpawnComponent enemySpawner1;
   late SpawnComponent enemySpawner2;
@@ -69,16 +72,18 @@ class MiniGame extends FlameGame with HasKeyboardHandlerComponents, TapCallbacks
       pauseEngine();
     }
 
+    _resetAllGame();
     _arrowManager(dt);
     _gameStageManager();
     _backgroundMusicManager();
     _removeComponentWhenArcherDeadAndAddComponentWhenArcherRevive();
-    _enemySpawnPeriodChanger();
     super.update(dt);
   }
 
   @override
   KeyEventResult onKeyEvent(RawKeyEvent event, Set<LogicalKeyboardKey> keysPressed) {
+    // this is used to throw arrows
+    // also space key is used to continuo the game if it was paused
     if(keysPressed.contains(LogicalKeyboardKey.space)) {
       miniGameBloc.add(SpacePressingEvent());
       if(!miniGameBloc.state.isArcherDead && miniGameBloc.state.flutterPage != 3) {
@@ -87,6 +92,10 @@ class MiniGame extends FlameGame with HasKeyboardHandlerComponents, TapCallbacks
       }
     } else {
       miniGameBloc.add(NotSpacePressingEvent());
+    }
+
+    if(keysPressed.contains(LogicalKeyboardKey.escape)){
+      miniGameBloc.add(GoToPausePage());
     }
     return super.onKeyEvent(event, keysPressed);
   }
@@ -226,20 +235,6 @@ class MiniGame extends FlameGame with HasKeyboardHandlerComponents, TapCallbacks
     wasArcherDead = miniGameBloc.state.isArcherDead;
   }
 
-  void _enemySpawnPeriodChanger() {
-    if(miniGameBloc.state.difficultyLevel != previousDifficultyLevel && !miniGameBloc.state.isArcherDead) {
-      enemySpawner1.removeFromParent();
-      enemySpawner2.removeFromParent();
-
-      enemySpawner1 = _enemyCreater(true, Vector2.all(280), size.x,);
-      enemySpawner2 = _enemyCreater(false, Vector2.all(280), 0);
-
-      addAll({enemySpawner1, enemySpawner2});
-    }
-
-    previousDifficultyLevel = miniGameBloc.state.difficultyLevel;
-  }
-
   void _backgroundMusicManager() {
     if(miniGameBloc.state.flutterPage != 1 || miniGameBloc.state.isArcherDead) {
       backgroundMusic.pause();
@@ -253,44 +248,22 @@ class MiniGame extends FlameGame with HasKeyboardHandlerComponents, TapCallbacks
     if(miniGameBloc.state.monsterKillNumber == 10 && miniGameBloc.state.gameStage == 1) {
       // game stage will be 2
       miniGameBloc.add(NextGameStageEvent());
-      enemySpawner1.removeFromParent();
-      enemySpawner2.removeFromParent();
-      
-      enemySpawner1 = _enemyCreater(true, Vector2.all(280), size.x,);
-      enemySpawner2 = _enemyCreater(false, Vector2.all(280), 0);
+      _removeAndAddEnemySpawner();
 
-      addAll({enemySpawner1, enemySpawner2});
     } else if(miniGameBloc.state.monsterKillNumber == 20 && miniGameBloc.state.gameStage == 2) {
       // game stage will be 3
       miniGameBloc.add(NextGameStageEvent());
-      enemySpawner1.removeFromParent();
-      enemySpawner2.removeFromParent();
-      
-      enemySpawner1 = _enemyCreater(true, Vector2.all(280), size.x,);
-      enemySpawner2 = _enemyCreater(false, Vector2.all(280), 0);
+      _removeAndAddEnemySpawner();
 
-      addAll({enemySpawner1, enemySpawner2});
     } else if(miniGameBloc.state.monsterKillNumber == 30 && miniGameBloc.state.gameStage == 3) {
       // game stage will be 4 (final stage)
       miniGameBloc.add(NextGameStageEvent());
-      enemySpawner1.removeFromParent();
-      enemySpawner2.removeFromParent();
-      
-      enemySpawner1 = _enemyCreater(true, Vector2.all(280), size.x,);
-      enemySpawner2 = _enemyCreater(false, Vector2.all(280), 0);
+      _removeAndAddEnemySpawner();
 
-      addAll({enemySpawner1, enemySpawner2});
     } else if(miniGameBloc.state.monsterKillNumber == 40 && miniGameBloc.state.gameStage == 4) {
       // game stage will be reset to 1 
       miniGameBloc.add(ResetGameStageEvent());
-      enemySpawner1.removeFromParent();
-      enemySpawner2.removeFromParent();
-
-      // I add the spawnres again so when the player starts playing again the monsters continuo spawning
-      enemySpawner1 = _enemyCreater(true, Vector2.all(280), size.x,);
-      enemySpawner2 = _enemyCreater(false, Vector2.all(280), 0);
-
-      addAll({enemySpawner1, enemySpawner2});
+      _removeAndAddEnemySpawner();
       
       // if the player plays gameMode 0 (finite mode) he will win the game
       // otherwise the player will continuo playing.
@@ -301,4 +274,53 @@ class MiniGame extends FlameGame with HasKeyboardHandlerComponents, TapCallbacks
       }
     }
   }
+
+  // the spawner is removed and added again because
+  // when the player moves to the next stage 
+  // the new spawner with the new monster will be added 
+  // and the previous one will be removed
+  void _removeAndAddEnemySpawner() {
+    enemySpawner1.removeFromParent();
+    enemySpawner2.removeFromParent();
+
+    enemySpawner1 = _enemyCreater(true, Vector2.all(280), size.x,);
+    enemySpawner2 = _enemyCreater(false, Vector2.all(280), 0);
+
+    addAll({enemySpawner1, enemySpawner2}); 
+  }
+
+  void _resetAllGame() {
+    // this works when the player press exit on the pause page
+    if(miniGameBloc.state.isTheGameReset){
+      
+      // this make the isTheGamereset => false
+      miniGameBloc.add(NotResetAllGameEvent());
+
+      _removeAndAddEnemySpawner();
+
+    }
+  }
+
+  // by using gameRef I added the blood prarticle to the monsters
+  ParticleSystemComponent bloodParticlesForMonsters(Vector2 position) {
+    final Random random = Random();
+    Vector2 randomVector2KillEffect() => (Vector2.random(random) - Vector2.random(random)) * 80;
+    
+    return ParticleSystemComponent(
+      particle: Particle.generate(
+        lifespan: 0.2,
+        count: 5,
+        generator: (i) => AcceleratedParticle(
+          position: position,
+          acceleration: randomVector2KillEffect(),
+          speed: randomVector2KillEffect(),
+          child: CircleParticle(
+            radius: 1,
+            paint: Paint()..color = Colors.red,
+          ),
+        ),
+      ),
+    );
+  }
+
 }

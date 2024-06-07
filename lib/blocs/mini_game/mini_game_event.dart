@@ -46,3 +46,7 @@ class NextGameStageEvent extends MiniGameEvent {}
 class ResetGameStageEvent extends MiniGameEvent {}
 
 class ChangeGameMode extends MiniGameEvent {}
+
+class ResetAllGameEvent extends MiniGameEvent {}
+
+class NotResetAllGameEvent extends MiniGameEvent {}
