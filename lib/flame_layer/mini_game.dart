@@ -1,10 +1,9 @@
-
 import 'dart:math';
-
 import 'package:flame/components.dart';
 import 'package:flame/events.dart';
 import 'package:flame/game.dart';
 import 'package:flame/particles.dart';
+import 'package:flame/rendering.dart';
 import 'package:flame_audio/bgm.dart';
 import 'package:flame_audio/flame_audio.dart';
 import 'package:flame_bloc/flame_bloc.dart';
@@ -25,7 +24,7 @@ import 'package:mini_game_via_flame/sprites/heart.dart';
 import 'package:mini_game_via_flame/sprites/mushroom.dart';
 import 'package:mini_game_via_flame/sprites/skeleton.dart';
 
-class MiniGame extends FlameGame with HasKeyboardHandlerComponents, TapCallbacks, DragCallbacks, HasCollisionDetection{
+class MiniGame extends FlameGame with HasKeyboardHandlerComponents, TapCallbacks, DragCallbacks, HasCollisionDetection, HasDecorator{
   final MiniGameBloc miniGameBloc;
   MiniGame({required this.miniGameBloc});
   late final Sprite background;
@@ -41,8 +40,9 @@ class MiniGame extends FlameGame with HasKeyboardHandlerComponents, TapCallbacks
   late SpawnComponent enemySpawner2;
   late bool wasArcherDead = miniGameBloc.state.isArcherDead;
   late int previousDifficultyLevel = miniGameBloc.state.difficultyLevel;
-  
-  
+  late int previousArcherHealth = miniGameBloc.state.archerHelth;
+  late final Decorator decoratorForArcher;
+  // add(FlameBlocProvider.value(value: miniGameBloc, children: [archerPlayer]));
 
   @override
   Future<void> onLoad() async{
@@ -50,14 +50,13 @@ class MiniGame extends FlameGame with HasKeyboardHandlerComponents, TapCallbacks
     await images.loadAllImages();
     background = Sprite(images.fromCache("background.png"));
     archerPlayer = ArcherPlayer();
-    add(SpriteComponent(sprite: background, size: size));
-    add(FlameBlocProvider.value(value: miniGameBloc, children: [archerPlayer]));
-
+    decoratorForArcher = archerPlayer.decorator;
     heartSpawner = _heartCreater();
     enemySpawner1 = _enemyCreater(true, Vector2.all(280), size.x);
     enemySpawner2 = _enemyCreater(false, Vector2.all(280), 0);
-    
-    addAll({heartSpawner, enemySpawner1, enemySpawner2});
+
+
+    addAll({SpriteComponent(sprite: background, size: size), heartSpawner, enemySpawner1, enemySpawner2, archerPlayer, });
     return super.onLoad();
   }
 
@@ -72,6 +71,7 @@ class MiniGame extends FlameGame with HasKeyboardHandlerComponents, TapCallbacks
       pauseEngine();
     }
 
+    _archerLowHealthDecorator();
     _resetAllGame();
     _arrowManager(dt);
     _gameStageManager();
@@ -299,6 +299,20 @@ class MiniGame extends FlameGame with HasKeyboardHandlerComponents, TapCallbacks
       _removeAndAddEnemySpawner();
 
     }
+  }
+
+  // this method works when archer health is low
+  void _archerLowHealthDecorator() {
+    // previous value is used to avoid adding the same decoration 
+    // previousArcherHealth > 20, this validation is added because when the archer health is 0, the decoration  will be added again
+    // and I do not want that to happen
+    if(miniGameBloc.state.archerHelth <= 20 && previousArcherHealth > miniGameBloc.state.archerHelth && previousArcherHealth > 20){
+      decoratorForArcher.addLast(PaintDecorator.tint(const Color.fromARGB(93, 255, 0, 0)));
+    } else if(miniGameBloc.state.archerHelth > 20 && previousArcherHealth < miniGameBloc.state.archerHelth && previousArcherHealth <= 20) {
+      decoratorForArcher.replaceLast(null);
+    }
+    
+    previousArcherHealth = miniGameBloc.state.archerHelth;
   }
 
   // by using gameRef I added the blood prarticle to the monsters
