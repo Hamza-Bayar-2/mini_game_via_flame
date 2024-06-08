@@ -21,6 +21,7 @@ class Skeleton extends SpriteAnimationGroupComponent with HasGameRef<MiniGame>, 
   bool isSkeletonFacingRight = true;
   bool isDying = false;
   final Timer skeletonDeathTimer = Timer(0.39);
+  final Timer bloodTimer = Timer(0.1);
   final rectangleHitbox = RectangleHitbox.relative(parentSize: Vector2.all(280), Vector2(0.15, 0.33), position: Vector2(120, 95));
 
   @override
@@ -39,7 +40,13 @@ class Skeleton extends SpriteAnimationGroupComponent with HasGameRef<MiniGame>, 
 
     if(isDying || gameRef.miniGameBloc.state.gameStage != 4) {
 
-      add(gameRef.bloodParticlesForMonsters(Vector2.all(150)));
+      if(bloodTimer.finished){
+        bloodTimer.pause();
+      } else {  
+        bloodTimer.resume();
+        bloodTimer.update(dt);
+        add(gameRef.bloodParticlesForMonsters(Vector2.all(150)));
+      }
 
       rectangleHitbox.removeFromParent();
       skeletonDeathTimer.resume();

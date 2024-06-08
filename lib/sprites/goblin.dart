@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'package:flame/collisions.dart';
 import 'package:flame/components.dart';
-import 'package:flame/text.dart';
 import 'package:flame_audio/flame_audio.dart';
 import 'package:mini_game_via_flame/flame_layer/mini_game.dart';
 import 'package:mini_game_via_flame/sprites/archer.dart';
@@ -22,6 +21,7 @@ class Goblin extends SpriteAnimationGroupComponent with HasGameRef<MiniGame>, Co
   bool isGoblinFacingRight = true;
   bool isDying = false;
   final Timer goblinDeathTimer = Timer(0.39);
+  final Timer bloodTimer = Timer(0.1);
   final rectangleHitbox = RectangleHitbox.relative(parentSize: Vector2.all(280), Vector2(0.15, 0.22), position: Vector2(120, 124));
 
   @override
@@ -39,8 +39,14 @@ class Goblin extends SpriteAnimationGroupComponent with HasGameRef<MiniGame>, Co
     }
     
     if(isDying || gameRef.miniGameBloc.state.gameStage != 1) {
-
-      add(gameRef.bloodParticlesForMonsters(Vector2.all(150)));
+      
+      if(bloodTimer.finished){
+        bloodTimer.pause();
+      } else {  
+        bloodTimer.resume();
+        bloodTimer.update(dt);
+        add(gameRef.bloodParticlesForMonsters(Vector2.all(150)));
+      }
 
       rectangleHitbox.removeFromParent();
       goblinDeathTimer.resume();

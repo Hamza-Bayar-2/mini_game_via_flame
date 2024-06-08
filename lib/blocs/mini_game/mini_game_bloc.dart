@@ -1,8 +1,5 @@
-import 'dart:html';
-
 import 'package:bloc/bloc.dart';
 import 'package:equatable/equatable.dart';
-import 'package:flame/game.dart';
 part 'mini_game_event.dart';
 part 'mini_game_state.dart';
 

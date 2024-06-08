@@ -21,6 +21,7 @@ class Mushroom extends SpriteAnimationGroupComponent with HasGameRef<MiniGame>, 
   bool isMushroomFacingRight = true;
   bool isDying = false;
   final Timer mushroomDeathTimer = Timer(0.39);
+  final Timer bloodTimer = Timer(0.1);
   final rectangleHitbox = RectangleHitbox.relative(parentSize: Vector2.all(280), Vector2(0.15, 0.25), position: Vector2(120, 115));
 
   @override
@@ -39,7 +40,13 @@ class Mushroom extends SpriteAnimationGroupComponent with HasGameRef<MiniGame>, 
 
     if(isDying || gameRef.miniGameBloc.state.gameStage != 2) {
 
-      add(gameRef.bloodParticlesForMonsters(Vector2.all(150)));
+      if(bloodTimer.finished){
+        bloodTimer.pause();
+      } else {  
+        bloodTimer.resume();
+        bloodTimer.update(dt);
+        add(gameRef.bloodParticlesForMonsters(Vector2.all(150)));
+      }
 
       rectangleHitbox.removeFromParent();
       mushroomDeathTimer.resume();

@@ -304,11 +304,11 @@ class MiniGame extends FlameGame with HasKeyboardHandlerComponents, TapCallbacks
   // by using gameRef I added the blood prarticle to the monsters
   ParticleSystemComponent bloodParticlesForMonsters(Vector2 position) {
     final Random random = Random();
-    Vector2 randomVector2KillEffect() => (Vector2.random(random) - Vector2.random(random)) * 80;
+    Vector2 randomVector2KillEffect() => (-Vector2.random(random) - Vector2(-1, -0.5)) * 200;
     
     return ParticleSystemComponent(
       particle: Particle.generate(
-        lifespan: 0.2,
+        lifespan: 0.1,
         count: 5,
         generator: (i) => AcceleratedParticle(
           position: position,

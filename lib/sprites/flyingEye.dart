@@ -23,6 +23,7 @@ class FlyingEye extends SpriteAnimationGroupComponent with HasGameRef<MiniGame>,
   // the timer is a bit less than the death time, 
   // because the death animation repeats a bit
   final Timer flyingEyeDeathTimer = Timer(0.39);
+  final Timer bloodTimer = Timer(0.1);
   final rectangleHitbox = RectangleHitbox.relative(parentSize: Vector2.all(280), Vector2(0.22, 0.15), position: Vector2(115, 124));
 
   @override
@@ -41,7 +42,13 @@ class FlyingEye extends SpriteAnimationGroupComponent with HasGameRef<MiniGame>,
 
     if(isDying || gameRef.miniGameBloc.state.gameStage != 3) {
 
-      add(gameRef.bloodParticlesForMonsters(Vector2.all(150)));
+      if(bloodTimer.finished){
+        bloodTimer.pause();
+      } else {  
+        bloodTimer.resume();
+        bloodTimer.update(dt);
+        add(gameRef.bloodParticlesForMonsters(Vector2.all(150)));
+      }
 
       rectangleHitbox.removeFromParent();
       flyingEyeDeathTimer.resume();
