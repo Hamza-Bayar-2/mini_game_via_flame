@@ -126,7 +126,7 @@ class FlyingEye extends SpriteAnimationGroupComponent with HasGameRef<MiniGame>,
       }
       current = FlyingEyeState.run;
 
-      if(position.x > gameRef.size.x) {
+      if(position.x > gameRef.background.size.x) {
         removeFromParent(); 
       }
     }

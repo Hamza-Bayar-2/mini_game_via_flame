@@ -124,7 +124,7 @@ class Mushroom extends SpriteAnimationGroupComponent with HasGameRef<MiniGame>, 
       }
       current = MushroomState.run;
 
-      if(position.x > gameRef.size.x) {
+      if(position.x > gameRef.background.size.x) {
         removeFromParent(); 
       }
     }

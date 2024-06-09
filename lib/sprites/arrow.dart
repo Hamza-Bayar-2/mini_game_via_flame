@@ -77,7 +77,7 @@ class Arrow extends SpriteAnimationComponent with HasGameRef<MiniGame>, Collisio
       ),
     );
 
-    if(position.x < 0 || position.x > gameRef.size.x) {
+    if(position.x < 0 || position.x > gameRef.background.size.x) {
       removeFromParent(); 
     }
     super.update(dt);

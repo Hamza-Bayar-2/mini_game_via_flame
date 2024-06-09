@@ -125,7 +125,7 @@ class Goblin extends SpriteAnimationGroupComponent with HasGameRef<MiniGame>, Co
       }
       current = GoblinState.run;
 
-      if(position.x > gameRef.size.x) {
+      if(position.x > gameRef.background.size.x) {
         removeFromParent(); 
       }
     }

@@ -35,7 +35,7 @@ class MiniGame extends FlameGame with HasKeyboardHandlerComponents, TapCallbacks
   // in the archer's attack animation. 
   final Timer countdownAndRepeat = Timer(0.72);
   late Bgm backgroundMusic = FlameAudio.bgmFactory(audioCache: FlameAudio.audioCache); 
-  final double heartSpawnPeriod = 7.5;
+  final double heartSpawnPeriod = 0.5;
   late SpawnComponent heartSpawner;
   late SpawnComponent enemySpawner1;
   late SpawnComponent enemySpawner2;
@@ -54,9 +54,9 @@ class MiniGame extends FlameGame with HasKeyboardHandlerComponents, TapCallbacks
     await FlameAudio.audioCache.loadAll(['running.mp3', 'arrow.mp3', 'death.mp3', 'hurt.mp3', 'monsterDeath.mp3', 'bgm.mp3', 'powerUp.mp3', 'win.mp3', 'lose.mp3']);
     await images.loadAllImages();
     background = SpriteComponent(sprite: Sprite(images.fromCache("background.png")), size: size);
-    archerPlayer = ArcherPlayer()..debugMode = true;
+    archerPlayer = ArcherPlayer()..debugMode = false;
     heartSpawner = _heartCreater();
-    enemySpawner1 = _enemyCreater(true, Vector2.all(280), size.x);
+    enemySpawner1 = _enemyCreater(true, Vector2.all(280), background.size.x);
     enemySpawner2 = _enemyCreater(false, Vector2.all(280), 0);
 
     world = World(children: [background, archerPlayer, heartSpawner, enemySpawner1, enemySpawner2]);
@@ -153,7 +153,7 @@ class MiniGame extends FlameGame with HasKeyboardHandlerComponents, TapCallbacks
           return _enemyPickerForEnemyCreaterMethod(isSpawnRight, enemySize);
         },
         period: miniGameBloc.state.enemySpawnPeriod,
-        area: Rectangle.fromLTWH(positionX, 30, 0, size.y - 50),
+        area: Rectangle.fromLTWH(positionX, 30, 0, background.size.y - 50),
     );
   }
 
@@ -179,7 +179,7 @@ class MiniGame extends FlameGame with HasKeyboardHandlerComponents, TapCallbacks
         return Heart(animation: _heartAnimation(), anchor: Anchor.center);
       },
       period: heartSpawnPeriod,
-      area: Rectangle.fromLTWH(size.x / 12, size.y / 12, size.x * 0.8, size.y * 0.8),
+      area: Rectangle.fromLTWH(background.size.x / 12, background.size.y / 12, background.size.x * 0.8, background.size.y * 0.8),
     );
   }
 
@@ -202,7 +202,7 @@ class MiniGame extends FlameGame with HasKeyboardHandlerComponents, TapCallbacks
       enemySpawner2.removeFromParent();
     } else if (!miniGameBloc.state.isArcherDead && wasArcherDead){
       heartSpawner = _heartCreater();
-      enemySpawner1 = _enemyCreater(true, Vector2.all(280), size.x);
+      enemySpawner1 = _enemyCreater(true, Vector2.all(280), background.size.x);
       enemySpawner2 = _enemyCreater(false, Vector2.all(280), 0);
 
       world.addAll({heartSpawner, enemySpawner1, enemySpawner2});
@@ -259,7 +259,7 @@ class MiniGame extends FlameGame with HasKeyboardHandlerComponents, TapCallbacks
     enemySpawner1.removeFromParent();
     enemySpawner2.removeFromParent();
 
-    enemySpawner1 = _enemyCreater(true, Vector2.all(280), size.x,);
+    enemySpawner1 = _enemyCreater(true, Vector2.all(280), background.size.x,);
     enemySpawner2 = _enemyCreater(false, Vector2.all(280), 0);
 
     world.addAll({enemySpawner1, enemySpawner2}); 
