@@ -1,9 +1,11 @@
 import 'dart:async';
 import 'dart:math';
+import 'dart:ui';
 import 'package:flame/collisions.dart';
 import 'package:flame/components.dart';
 import 'package:flame/effects.dart';
 import 'package:flame/events.dart';
+import 'package:flame/rendering.dart';
 import 'package:flame_audio/bgm.dart';
 import 'package:flame_audio/flame_audio.dart';
 import 'package:flutter/src/services/raw_keyboard.dart';
@@ -11,6 +13,7 @@ import 'package:mini_game_via_flame/blocs/mini_game/mini_game_bloc.dart';
 import 'package:mini_game_via_flame/flame_layer/mini_game.dart';
 import 'package:mini_game_via_flame/sprites/flyingEye.dart';
 import 'package:mini_game_via_flame/sprites/goblin.dart';
+import 'package:mini_game_via_flame/sprites/heart.dart';
 import 'package:mini_game_via_flame/sprites/mushroom.dart';
 import 'package:mini_game_via_flame/sprites/skeleton.dart';
 
@@ -19,7 +22,7 @@ enum PressedKey {up, down, left, right, upRight, upLeft, downRight, downLeft, sp
 
 class ArcherPlayer extends SpriteAnimationGroupComponent with HasGameRef<MiniGame>, KeyboardHandler, TapCallbacks, DragCallbacks,
  CollisionCallbacks{
-  ArcherPlayer() : super(position: Vector2.all(500), size: Vector2.all(200), anchor: Anchor.centerRight);
+  ArcherPlayer() : super(position: Vector2.all(500), size: Vector2.all(200), anchor: Anchor.center);
   PressedKey pressedKey = PressedKey.none;
   double speed = 250;
   // When the player runs diagonally, this value will be used
@@ -29,20 +32,28 @@ class ArcherPlayer extends SpriteAnimationGroupComponent with HasGameRef<MiniGam
   // this timer is used for the archer death animation
   final archerDeathCountdown = Timer(0.7);
   final archerGetHitCountdown = Timer(0.21);
+  final archerHelathIncreaseCountdown = Timer(0.4);
+  bool isArcherHealthIncreased = false;
   bool isDeathAudioPlayed = false;
   bool isArcherRunning = false;
   bool isArcherGetHit = false;
   late Bgm runSoundBmg = FlameAudio.bgmFactory(audioCache: FlameAudio.audioCache);
-  late final CameraComponent gameCamera = CameraComponent();
-  late final cameraShake = MoveEffect.by(
-    Vector2(30, 30), 
-    InfiniteEffectController(ZigzagEffectController(period: 1.2))
+  final cameraShake = MoveEffect.by(
+    Vector2.all(20), 
+    InfiniteEffectController(ZigzagEffectController(period: 0.2))
   );
+  late int previousArcherHealth = gameRef.miniGameBloc.state.archerHelth;
+  late final Decorator decoratorForArcher;
+
 
   @override
   Future<void> onLoad() async {
     _loadAnimation();
     add(RectangleHitbox.relative(Vector2(0.25,0.30), parentSize: Vector2.all(200), anchor: Anchor.center));
+    gameRef.cameraComponent.viewfinder.add(cameraShake);
+    cameraShake.pause();
+    // this decorator belongs to the archer
+    decoratorForArcher = decorator;
     return super.onLoad();
   }
 
@@ -62,6 +73,8 @@ class ArcherPlayer extends SpriteAnimationGroupComponent with HasGameRef<MiniGam
       _archerMovement(dt);
       _archerRunningSound();
     }
+
+    _updateArcherDecorator(dt);
     super.update(dt);
   }
 
@@ -91,9 +104,13 @@ class ArcherPlayer extends SpriteAnimationGroupComponent with HasGameRef<MiniGam
   @override
   void onCollision(Set<Vector2> intersectionPoints, PositionComponent other) {
     if(other is Goblin || other is Mushroom || other is Skeleton || other is FlyingEye) {
+      cameraShake.resume();
       gameRef.miniGameBloc.add(DecreaseHealthEvent());
       isArcherGetHit = true;
+    } else if(other is Heart) {
+      isArcherHealthIncreased = true;
     }
+    cameraShake.pause();
     super.onCollision(intersectionPoints, other);
   }
   
@@ -236,7 +253,7 @@ class ArcherPlayer extends SpriteAnimationGroupComponent with HasGameRef<MiniGam
     position.add(velocity * dt);
 
     // this keeps the archer inseade the screen
-    position.clamp(Vector2(-30, 30), Vector2(gameRef.cameraComponent.viewport.size.x + 30, gameRef.cameraComponent.viewport.size.y - 30));
+    position.clamp(size - (size / 1.2), Vector2(gameRef.background.size.x, gameRef.background.size.y) - (size / 6));
   }
  
   // this method is used to prevent repeating the same code
@@ -284,13 +301,46 @@ class ArcherPlayer extends SpriteAnimationGroupComponent with HasGameRef<MiniGam
   }
   
   void _archerGetHit(double dt) {
+    cameraShake.resume();
     current = ArcherState.getHit;
     archerGetHitCountdown.resume();
     archerGetHitCountdown.update(dt);
     if(archerGetHitCountdown.finished){
+      cameraShake.pause();
       FlameAudio.play("hurt.mp3");
       isArcherGetHit = false;
       archerGetHitCountdown.stop();
     }
   }
+
+  void _updateArcherDecorator(double dt) {
+  archerHelathIncreaseCountdown.update(dt);
+
+  bool isLowHealth = gameRef.miniGameBloc.state.archerHelth <= 20;
+  
+  if (isArcherHealthIncreased) {
+    // Apply green tint when health is increased
+    archerHelathIncreaseCountdown.start();
+    decoratorForArcher.replaceLast(PaintDecorator.tint(const Color.fromARGB(143, 92, 255, 92)));
+    isArcherHealthIncreased = false;
+  } else if (archerHelathIncreaseCountdown.finished) {
+    // Revert to red tint if health is low, or clear the tint if health is not low
+    if (isLowHealth) {
+      decoratorForArcher.replaceLast(PaintDecorator.tint(const Color.fromARGB(93, 255, 0, 0)));
+    } else {
+      decoratorForArcher.replaceLast(null);
+    }
+    archerHelathIncreaseCountdown.stop();
+  } else if (isLowHealth && previousArcherHealth != gameRef.miniGameBloc.state.archerHelth && !gameRef.miniGameBloc.state.isArcherDead) {
+    // Apply red tint when health is low
+    decoratorForArcher.replaceLast(PaintDecorator.tint(const Color.fromARGB(93, 255, 0, 0)));
+  } else if (!isLowHealth && previousArcherHealth != gameRef.miniGameBloc.state.archerHelth) {
+    // Remove the tint if the health is no longer low and health is not increased
+    decoratorForArcher.replaceLast(null);
+  }
+
+  previousArcherHealth = gameRef.miniGameBloc.state.archerHelth;
+}
+
+
 }
