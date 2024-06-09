@@ -131,6 +131,6 @@ class Goblin extends SpriteAnimationGroupComponent with HasGameRef<MiniGame>, Co
     }
 
     velocity = Vector2(directionX, 0);
-    position += velocity * dt;
+    position.add(velocity * dt);
   }
 }

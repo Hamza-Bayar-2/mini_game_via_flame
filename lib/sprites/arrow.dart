@@ -57,7 +57,7 @@ class Arrow extends SpriteAnimationComponent with HasGameRef<MiniGame>, Collisio
     }
 
     velocity = Vector2(directionX, 0);
-    position += velocity * dt;
+    position.add(velocity * dt);
 
     add(
       ParticleSystemComponent(

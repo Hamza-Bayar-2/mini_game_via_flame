@@ -130,6 +130,6 @@ class Skeleton extends SpriteAnimationGroupComponent with HasGameRef<MiniGame>, 
     }
 
     velocity = Vector2(directionX, 0);
-    position += velocity * dt;
+    position.add(velocity * dt);
   }
 }

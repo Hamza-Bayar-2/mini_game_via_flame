@@ -30,7 +30,7 @@ class GamePage extends StatelessWidget {
                   ),
                 ],
               ),
-              Column(
+              state.gameMode == 0 ? Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text("Health: ${state.archerHelth}"),
@@ -38,6 +38,14 @@ class GamePage extends StatelessWidget {
                   Text("Kill amount: ${state.monsterKillNumber} / 40"),
                   const SizedBox(height: 20,),
                   Text("Stage: ${state.gameStage} / 4"),
+                ],
+              ) :
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text("Health: ${state.archerHelth}"),
+                  const SizedBox(height: 20,),
+                  Text("Kill amount: ${state.monsterKillNumber}"),
                 ],
               )
             ],

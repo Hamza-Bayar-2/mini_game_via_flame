@@ -7,10 +7,6 @@ abstract class MiniGameEvent extends Equatable {
   List<Object> get props => [];
 }
 
-class TapingEvent extends MiniGameEvent {}
-
-class NotTapingEvent extends MiniGameEvent {}
-
 class DecreaseHealthEvent extends MiniGameEvent {}
 
 class IncreaseHealthEvent extends MiniGameEvent {}

@@ -5,12 +5,6 @@ part 'mini_game_state.dart';
 
 class MiniGameBloc extends Bloc<MiniGameEvent, MiniGameState> {
   MiniGameBloc() : super(MiniGameState.initial()) {
-    on<TapingEvent>((event, emit) {
-      emit(state.copyWith(isTapingDown: true));
-    });
-    on<NotTapingEvent>((event, emit) {
-      emit(state.copyWith(isTapingDown: false));
-    });
     on<DecreaseHealthEvent>((event, emit) {
       final newHelth = state.archerHelth - 20;
       emit(state.copyWith(archerHelth: newHelth <= 0 ? 0 : newHelth));

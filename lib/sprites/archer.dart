@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:math';
 import 'package:flame/collisions.dart';
 import 'package:flame/components.dart';
+import 'package:flame/effects.dart';
 import 'package:flame/events.dart';
 import 'package:flame_audio/bgm.dart';
 import 'package:flame_audio/flame_audio.dart';
@@ -32,6 +33,11 @@ class ArcherPlayer extends SpriteAnimationGroupComponent with HasGameRef<MiniGam
   bool isArcherRunning = false;
   bool isArcherGetHit = false;
   late Bgm runSoundBmg = FlameAudio.bgmFactory(audioCache: FlameAudio.audioCache);
+  late final CameraComponent gameCamera = CameraComponent();
+  late final cameraShake = MoveEffect.by(
+    Vector2(30, 30), 
+    InfiniteEffectController(ZigzagEffectController(period: 1.2))
+  );
 
   @override
   Future<void> onLoad() async {
@@ -51,10 +57,6 @@ class ArcherPlayer extends SpriteAnimationGroupComponent with HasGameRef<MiniGam
       isArcherGetHit = false;
     } else if(isArcherGetHit) {
       _archerGetHit(dt); 
-    } else if(gameRef.miniGameBloc.state.isTapingDown){
-      archerDeathCountdown.stop();
-      current = ArcherState.attack;
-      runSoundBmg.stop();
     } else {
       archerDeathCountdown.stop();
       _archerMovement(dt);
@@ -231,10 +233,10 @@ class ArcherPlayer extends SpriteAnimationGroupComponent with HasGameRef<MiniGam
     }
 
     velocity = Vector2(directionX, directionY);
-    position += velocity * dt;
+    position.add(velocity * dt);
 
     // this keeps the archer inseade the screen
-    position.clamp(Vector2.zero(), Vector2(gameRef.size.x, gameRef.size.y));
+    position.clamp(Vector2(-30, 30), Vector2(gameRef.cameraComponent.viewport.size.x + 30, gameRef.cameraComponent.viewport.size.y - 30));
   }
  
   // this method is used to prevent repeating the same code

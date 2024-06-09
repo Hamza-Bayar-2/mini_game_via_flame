@@ -1,12 +1,12 @@
 import 'dart:math';
 import 'package:flame/components.dart';
+import 'package:flame/effects.dart';
 import 'package:flame/events.dart';
 import 'package:flame/game.dart';
 import 'package:flame/particles.dart';
 import 'package:flame/rendering.dart';
 import 'package:flame_audio/bgm.dart';
 import 'package:flame_audio/flame_audio.dart';
-import 'package:flame_bloc/flame_bloc.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/src/services/keyboard_key.g.dart';
 import 'package:flutter/src/services/raw_keyboard.dart';
@@ -27,7 +27,8 @@ import 'package:mini_game_via_flame/sprites/skeleton.dart';
 class MiniGame extends FlameGame with HasKeyboardHandlerComponents, TapCallbacks, DragCallbacks, HasCollisionDetection, HasDecorator{
   final MiniGameBloc miniGameBloc;
   MiniGame({required this.miniGameBloc});
-  late final Sprite background;
+  
+  late final SpriteComponent background;
   late final ArcherPlayer archerPlayer;
   // 0.72 seconds is the frame amount of the attack animation multiplies by step time (6 * 0.12)
   // The purpose of this timer is to ensure that arrows are released at the right time 
@@ -42,21 +43,41 @@ class MiniGame extends FlameGame with HasKeyboardHandlerComponents, TapCallbacks
   late int previousDifficultyLevel = miniGameBloc.state.difficultyLevel;
   late int previousArcherHealth = miniGameBloc.state.archerHelth;
   late final Decorator decoratorForArcher;
+  late final CameraComponent cameraComponent;
+  @override
+  late final World world;
+
+  final cameraShake = MoveEffect.by(
+    Vector2(5, 5), 
+    InfiniteEffectController(ZigzagEffectController(period: 0.2))
+  );
+
   // add(FlameBlocProvider.value(value: miniGameBloc, children: [archerPlayer]));
 
   @override
   Future<void> onLoad() async{
     await FlameAudio.audioCache.loadAll(['running.mp3', 'arrow.mp3', 'death.mp3', 'hurt.mp3', 'monsterDeath.mp3', 'bgm.mp3', 'powerUp.mp3', 'win.mp3', 'lose.mp3']);
     await images.loadAllImages();
-    background = Sprite(images.fromCache("background.png"));
-    archerPlayer = ArcherPlayer();
+    background = SpriteComponent(sprite: Sprite(images.fromCache("background.png")), size: size)..debugMode = true;
+    archerPlayer = ArcherPlayer()..priority = 1;
     decoratorForArcher = archerPlayer.decorator;
     heartSpawner = _heartCreater();
     enemySpawner1 = _enemyCreater(true, Vector2.all(280), size.x);
     enemySpawner2 = _enemyCreater(false, Vector2.all(280), 0);
+    // addAll({heartSpawner, enemySpawner1, enemySpawner2, archerPlayer});
 
+    world = World(children: [background, archerPlayer, heartSpawner, enemySpawner1, enemySpawner2]);
+    await add(world); 
+    cameraComponent = CameraComponent.withFixedResolution(
+      width: size.x,
+      height: size.y,
+      world: world
+    );
+    await add(cameraComponent);
+    cameraComponent.moveTo(size / 2);
+    cameraComponent.viewfinder.add(cameraShake);
+    cameraShake.pause();
 
-    addAll({SpriteComponent(sprite: background, size: size), heartSpawner, enemySpawner1, enemySpawner2, archerPlayer, });
     return super.onLoad();
   }
 
@@ -100,48 +121,13 @@ class MiniGame extends FlameGame with HasKeyboardHandlerComponents, TapCallbacks
     return super.onKeyEvent(event, keysPressed);
   }
 
-  @override
-  void onTapDown(TapDownEvent event) {
-    // by this event the isTapingDown bool variable is changing to true
-    miniGameBloc.add(TapingEvent());
-    super.onTapDown(event);
-  }
-
-  @override
-  void onTapUp(TapUpEvent event) {
-    print("tapup");
-    miniGameBloc.add(NotTapingEvent());
-    super.onTapUp(event);
-  }
-
-  @override
-  void onDragStart(DragStartEvent event) {
-    print("tapDrag");
-    miniGameBloc.add(TapingEvent());
-    super.onDragStart(event);
-  }
-
-  @override
-  void onDragEnd(DragEndEvent event) {
-    print("tapDragEnd");
-    miniGameBloc.add(NotTapingEvent());
-    super.onDragEnd(event);
-  }
-
-  @override
-  void onDragCancel(DragCancelEvent event) {
-    print("tapDragCancel");
-    miniGameBloc.add(NotTapingEvent());
-    super.onDragCancel(event);
-  }
-
   void _arrowManager(double dt) {
-    if((miniGameBloc.state.isSpaceKeyPressing || miniGameBloc.state.isTapingDown) && !miniGameBloc.state.isArcherDead) {
+    if((miniGameBloc.state.isSpaceKeyPressing) && !miniGameBloc.state.isArcherDead) {
       countdownAndRepeat.update(dt);
       countdownAndRepeat.resume();
       // when the time is up the arrow is released
       if(countdownAndRepeat.finished) {
-        add(_arrowCreater());
+        world.add(_arrowCreater());
         FlameAudio.play("arrow.mp3");
         countdownAndRepeat.start();
       }
@@ -177,18 +163,18 @@ class MiniGame extends FlameGame with HasKeyboardHandlerComponents, TapCallbacks
           return _enemyPickerForEnemyCreaterMethod(isSpawnRight, enemySize);
         },
         period: miniGameBloc.state.enemySpawnPeriod,
-        area: Rectangle.fromLTWH(positionX, 0, 0, size.y),
+        area: Rectangle.fromLTWH(positionX, 30, 0, size.y - 30),
     );
   }
 
   dynamic _enemyPickerForEnemyCreaterMethod(bool isSpawnRight, Vector2 enemySize) {
-    if(miniGameBloc.state.gameStage == 1) {
+    if(miniGameBloc.state.gameStage % 4 == 1) {
       return Goblin(isSpawnRight: isSpawnRight, size: enemySize);
-    } else if(miniGameBloc.state.gameStage == 2) {
+    } else if(miniGameBloc.state.gameStage % 4 == 2) {
       return Mushroom(isSpawnRight: isSpawnRight, size: enemySize);
-    } else if(miniGameBloc.state.gameStage == 3) {
+    } else if(miniGameBloc.state.gameStage % 4 == 3) {
       return FlyingEye(isSpawnRight: isSpawnRight, size: enemySize);
-    } else if(miniGameBloc.state.gameStage == 4) {
+    } else if(miniGameBloc.state.gameStage % 4 == 0) {
       return Skeleton(isSpawnRight: isSpawnRight, size: enemySize);
     } 
     else {
@@ -229,7 +215,7 @@ class MiniGame extends FlameGame with HasKeyboardHandlerComponents, TapCallbacks
       enemySpawner1 = _enemyCreater(true, Vector2.all(280), size.x);
       enemySpawner2 = _enemyCreater(false, Vector2.all(280), 0);
 
-      addAll({heartSpawner, enemySpawner1, enemySpawner2});
+      world.addAll({heartSpawner, enemySpawner1, enemySpawner2});
     }
 
     wasArcherDead = miniGameBloc.state.isArcherDead;
@@ -286,7 +272,8 @@ class MiniGame extends FlameGame with HasKeyboardHandlerComponents, TapCallbacks
     enemySpawner1 = _enemyCreater(true, Vector2.all(280), size.x,);
     enemySpawner2 = _enemyCreater(false, Vector2.all(280), 0);
 
-    addAll({enemySpawner1, enemySpawner2}); 
+    world.addAll({enemySpawner1, enemySpawner2}); 
+
   }
 
   void _resetAllGame() {
