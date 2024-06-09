@@ -158,13 +158,13 @@ class MiniGame extends FlameGame with HasKeyboardHandlerComponents, TapCallbacks
   }
 
   dynamic _enemyPickerForEnemyCreaterMethod(bool isSpawnRight, Vector2 enemySize) {
-    if(miniGameBloc.state.gameStage % 4 == 1) {
+    if(miniGameBloc.state.gameStage == 1) {
       return Goblin(isSpawnRight: isSpawnRight, size: enemySize);
-    } else if(miniGameBloc.state.gameStage % 4 == 2) {
+    } else if(miniGameBloc.state.gameStage == 2) {
       return Mushroom(isSpawnRight: isSpawnRight, size: enemySize);
-    } else if(miniGameBloc.state.gameStage % 4 == 3) {
+    } else if(miniGameBloc.state.gameStage == 3) {
       return FlyingEye(isSpawnRight: isSpawnRight, size: enemySize);
-    } else if(miniGameBloc.state.gameStage % 4 == 0) {
+    } else if(miniGameBloc.state.gameStage == 4) {
       return Skeleton(isSpawnRight: isSpawnRight, size: enemySize);
     } 
     else {
@@ -221,22 +221,22 @@ class MiniGame extends FlameGame with HasKeyboardHandlerComponents, TapCallbacks
   }
 
   void _gameStageManager() {
-    if(miniGameBloc.state.monsterKillNumber == 10 && miniGameBloc.state.gameStage == 1) {
+    if(miniGameBloc.state.monsterKillNumber % 40 == 10 && miniGameBloc.state.gameStage == 1) {
       // game stage will be 2
       miniGameBloc.add(NextGameStageEvent());
       _removeAndAddEnemySpawner();
 
-    } else if(miniGameBloc.state.monsterKillNumber == 20 && miniGameBloc.state.gameStage == 2) {
+    } else if(miniGameBloc.state.monsterKillNumber % 40 == 20 && miniGameBloc.state.gameStage == 2) {
       // game stage will be 3
       miniGameBloc.add(NextGameStageEvent());
       _removeAndAddEnemySpawner();
 
-    } else if(miniGameBloc.state.monsterKillNumber == 30 && miniGameBloc.state.gameStage == 3) {
+    } else if(miniGameBloc.state.monsterKillNumber % 40 == 30 && miniGameBloc.state.gameStage == 3) {
       // game stage will be 4 (final stage)
       miniGameBloc.add(NextGameStageEvent());
       _removeAndAddEnemySpawner();
 
-    } else if(miniGameBloc.state.monsterKillNumber == 40 && miniGameBloc.state.gameStage == 4) {
+    } else if(miniGameBloc.state.monsterKillNumber % 40 == 0 && miniGameBloc.state.gameStage == 4) {
       // game stage will be reset to 1 
       miniGameBloc.add(ResetGameStageEvent());
       _removeAndAddEnemySpawner();
