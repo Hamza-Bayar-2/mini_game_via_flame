@@ -11,6 +11,7 @@ import 'package:flame_audio/flame_audio.dart';
 import 'package:flutter/src/services/raw_keyboard.dart';
 import 'package:mini_game_via_flame/blocs/mini_game/mini_game_bloc.dart';
 import 'package:mini_game_via_flame/flame_layer/mini_game.dart';
+import 'package:mini_game_via_flame/hit_boxes/killHitbox.dart';
 import 'package:mini_game_via_flame/sprites/flyingEye.dart';
 import 'package:mini_game_via_flame/sprites/goblin.dart';
 import 'package:mini_game_via_flame/sprites/heart.dart';
@@ -22,7 +23,7 @@ enum PressedKey {up, down, left, right, upRight, upLeft, downRight, downLeft, sp
 
 class ArcherPlayer extends SpriteAnimationGroupComponent with HasGameRef<MiniGame>, KeyboardHandler, TapCallbacks, DragCallbacks,
  CollisionCallbacks{
-  ArcherPlayer() : super(position: Vector2.all(500), size: Vector2.all(200), anchor: Anchor.center);
+  ArcherPlayer({required Vector2 size, required Vector2 position}) : super(position: position, size: size, anchor: Anchor.center);
   PressedKey pressedKey = PressedKey.none;
   double speed = 250;
   // When the player runs diagonally, this value will be used
@@ -49,7 +50,7 @@ class ArcherPlayer extends SpriteAnimationGroupComponent with HasGameRef<MiniGam
   @override
   Future<void> onLoad() async {
     _loadAnimation();
-    add(RectangleHitbox.relative(Vector2(0.25,0.30), parentSize: Vector2.all(200), anchor: Anchor.center));
+    add(RectangleHitbox.relative(Vector2(0.25,0.30), parentSize: size, anchor: Anchor.center));
     gameRef.cameraComponent.viewfinder.add(cameraShake);
     cameraShake.pause();
     // this decorator belongs to the archer

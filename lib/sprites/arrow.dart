@@ -7,6 +7,8 @@ import 'package:flame/particles.dart';
 import 'package:flutter/material.dart';
 import 'package:mini_game_via_flame/blocs/mini_game/mini_game_bloc.dart';
 import 'package:mini_game_via_flame/flame_layer/mini_game.dart';
+import 'package:mini_game_via_flame/hit_boxes/killHitbox.dart';
+import 'package:mini_game_via_flame/hit_boxes/runAwayHitbox.dart';
 import 'package:mini_game_via_flame/sprites/flyingEye.dart';
 import 'package:mini_game_via_flame/sprites/goblin.dart';
 import 'package:mini_game_via_flame/sprites/mushroom.dart';
@@ -27,14 +29,14 @@ class Arrow extends SpriteAnimationComponent with HasGameRef<MiniGame>, Collisio
   bool isArrowFacingRight = true;
   final Random _random = Random();
   Vector2 randomVector2ForArrow() => (-Vector2.random(_random) - Vector2(1, -0.5)) * 300;
-
   // the reason why I used variable instead of using it directly inside the "if"
   // because when I do it like that the arrow will change direction 
   // according to the archer even after leaving the bow
   late bool isArcherFacingRight = gameRef.miniGameBloc.state.isPlayerFacingRight;
+  
   @override
   FutureOr<void> onLoad() {
-    add(RectangleHitbox.relative(parentSize: Vector2(48, 10), Vector2(1, 1), anchor: Anchor.center));
+    add(RectangleHitbox.relative(parentSize: size, Vector2(1, 1), anchor: Anchor.center));
     return super.onLoad();
   }
 
@@ -65,7 +67,7 @@ class Arrow extends SpriteAnimationComponent with HasGameRef<MiniGame>, Collisio
           lifespan: 0.1,
           count: 2,
           generator: (i) => AcceleratedParticle(
-            position: Vector2(-8, 5),
+            position: Vector2(0, position.y * 0.01),
             acceleration: randomVector2ForArrow(),
             speed: randomVector2ForArrow(),
             child: CircleParticle(
@@ -85,10 +87,20 @@ class Arrow extends SpriteAnimationComponent with HasGameRef<MiniGame>, Collisio
 
   @override
   void onCollision(Set<Vector2> intersectionPoints, PositionComponent other) {
-    if(other is Goblin || other is Mushroom || other is Skeleton || other is FlyingEye) {
+    if(other is Mushroom || other is Skeleton || other is FlyingEye) {
       removeFromParent( );
       gameRef.miniGameBloc.add(KillMonster());
       print("arrow hited");
+    } 
+    else if(other is Goblin) {
+      print(other.collidingWith);
+      for(final hited in other.children.whereType<RectangleHitbox>()){
+        if(hited is KillHitbox) {
+          removeFromParent();
+          gameRef.miniGameBloc.add(KillMonster());
+          print("kill hit box");
+        }
+      }
     }
     super.onCollision(intersectionPoints, other);
   }

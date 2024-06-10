@@ -22,15 +22,15 @@ class Heart extends SpriteAnimationComponent with HasGameRef<MiniGame>, Collisio
   FutureOr<void> onLoad() {
     add(
       RectangleHitbox.relative(
-        parentSize: Vector2.all(40), 
+        parentSize: size, 
         Vector2(1, 1), 
         anchor: Anchor.center
-      )
+      )..debugMode = false
     );
 
     add(
       SizeEffect.to(
-        Vector2.all(25),
+        size * 1.3,
         EffectController(duration: 0.5, alternate: true, infinite: true),
       )
     );

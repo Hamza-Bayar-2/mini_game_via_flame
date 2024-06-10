@@ -10,12 +10,13 @@ enum FlyingEyeState {run, death, attack}
 
 class FlyingEye extends SpriteAnimationGroupComponent with HasGameRef<MiniGame>, CollisionCallbacks{
   bool isSpawnRight;
+  Vector2 enemySize;
   FlyingEye({
     Vector2? position,
-    Vector2? size,
+    required this.enemySize,
     Anchor anchor = Anchor.center,
     required this.isSpawnRight
-  }) : super(position: position, size: size, anchor: anchor);
+  }) : super(position: position, size: enemySize, anchor: anchor);
 
   double flyingEyeSpeed = 150;
   bool isFlyingEyeFacingRight = true;
@@ -24,7 +25,7 @@ class FlyingEye extends SpriteAnimationGroupComponent with HasGameRef<MiniGame>,
   // because the death animation repeats a bit
   final Timer flyingEyeDeathTimer = Timer(0.39);
   final Timer bloodTimer = Timer(0.1);
-  final rectangleHitbox = RectangleHitbox.relative(parentSize: Vector2.all(280), Vector2(0.22, 0.15), position: Vector2(115, 124));
+  late final rectangleHitbox = RectangleHitbox.relative(parentSize: enemySize, Vector2(0.22, 0.15))..debugMode = false;
 
   @override
   Future<void> onLoad() async {
@@ -47,7 +48,7 @@ class FlyingEye extends SpriteAnimationGroupComponent with HasGameRef<MiniGame>,
       } else {  
         bloodTimer.resume();
         bloodTimer.update(dt);
-        add(gameRef.bloodParticlesForMonsters(Vector2.all(150)));
+        add(gameRef.bloodParticlesForMonsters(enemySize * 0.55));
       }
 
       rectangleHitbox.removeFromParent();
@@ -71,7 +72,7 @@ class FlyingEye extends SpriteAnimationGroupComponent with HasGameRef<MiniGame>,
   void onCollision(Set<Vector2> intersectionPoints, PositionComponent other) {
     if(other is Arrow && !isDying){
       isDying = true;
-      FlameAudio.play("monsterDeath.mp3");
+      FlameAudio.play("flyingEyeDeath.mp3");
     } 
     else if (other is ArcherPlayer) {
       removeFromParent();

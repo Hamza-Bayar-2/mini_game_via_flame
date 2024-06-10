@@ -10,19 +10,20 @@ enum MushroomState {run, death, attack}
 
 class Mushroom extends SpriteAnimationGroupComponent with HasGameRef<MiniGame>, CollisionCallbacks{
   bool isSpawnRight;
+  Vector2 enemySize;
   Mushroom({
     Vector2? position,
-    Vector2? size,
+    required this.enemySize,
     Anchor anchor = Anchor.center,
     required this.isSpawnRight
-  }) : super(position: position, size: size, anchor: anchor);
+  }) : super(position: position, size: enemySize, anchor: anchor);
 
   double mushroomSpeed = 170;
   bool isMushroomFacingRight = true;
   bool isDying = false;
   final Timer mushroomDeathTimer = Timer(0.39);
   final Timer bloodTimer = Timer(0.1);
-  final rectangleHitbox = RectangleHitbox.relative(parentSize: Vector2.all(280), Vector2(0.15, 0.25), position: Vector2(120, 115));
+  late final rectangleHitbox = RectangleHitbox.relative(parentSize: enemySize, Vector2(0.15, 0.25), position: enemySize * 0.42)..debugMode = false;
 
   @override
   FutureOr<void> onLoad() {
@@ -45,7 +46,7 @@ class Mushroom extends SpriteAnimationGroupComponent with HasGameRef<MiniGame>, 
       } else {  
         bloodTimer.resume();
         bloodTimer.update(dt);
-        add(gameRef.bloodParticlesForMonsters(Vector2.all(150)));
+        add(gameRef.bloodParticlesForMonsters(enemySize * 0.55));
       }
 
       rectangleHitbox.removeFromParent();
@@ -69,7 +70,7 @@ class Mushroom extends SpriteAnimationGroupComponent with HasGameRef<MiniGame>, 
   void onCollision(Set<Vector2> intersectionPoints, PositionComponent other) {
     if(other is Arrow && !isDying){
       isDying = true;
-      FlameAudio.play("monsterDeath.mp3");
+      FlameAudio.play("mushroomDeath.mp3");
     } 
     else if (other is ArcherPlayer) {
       removeFromParent();

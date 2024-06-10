@@ -35,7 +35,7 @@ class MiniGame extends FlameGame with HasKeyboardHandlerComponents, TapCallbacks
   // in the archer's attack animation. 
   final Timer countdownAndRepeat = Timer(0.72);
   late Bgm backgroundMusic = FlameAudio.bgmFactory(audioCache: FlameAudio.audioCache); 
-  final double heartSpawnPeriod = 0.5;
+  final double heartSpawnPeriod = 7.5;
   late SpawnComponent heartSpawner;
   late SpawnComponent enemySpawner1;
   late SpawnComponent enemySpawner2;
@@ -46,18 +46,22 @@ class MiniGame extends FlameGame with HasKeyboardHandlerComponents, TapCallbacks
   late final CameraComponent cameraComponent;
   @override
   late final World world;
+  final archerScale = 0.3;
+  final monstersScale = 0.44;
+  final arrowScale = 0.35;
+  final heartScale = 0.06;
 
   // add(FlameBlocProvider.value(value: miniGameBloc, children: [archerPlayer]));
 
   @override
   Future<void> onLoad() async{
-    await FlameAudio.audioCache.loadAll(['running.mp3', 'arrow.mp3', 'death.mp3', 'hurt.mp3', 'monsterDeath.mp3', 'bgm.mp3', 'powerUp.mp3', 'win.mp3', 'lose.mp3']);
+    await FlameAudio.audioCache.loadAll(['running.mp3', 'arrow.mp3', 'death.mp3', 'hurt.mp3', 'monsterDeath.mp3', 'bgm.mp3', 'powerUp.mp3', 'win.mp3', 'lose.mp3', 'skeletonDeath.mp3', 'skeletonDeath2.mp3', 'mushroomDeath.mp3', 'flyingEyeDeath.mp3']);
     await images.loadAllImages();
     background = SpriteComponent(sprite: Sprite(images.fromCache("background.png")), size: size);
-    archerPlayer = ArcherPlayer()..debugMode = false;
+    archerPlayer = ArcherPlayer(size: Vector2.all(background.size.y * archerScale), position: Vector2(background.size.x / 2, background.size.y / 2))..debugMode = true;
     heartSpawner = _heartCreater();
-    enemySpawner1 = _enemyCreater(true, Vector2.all(280), background.size.x);
-    enemySpawner2 = _enemyCreater(false, Vector2.all(280), 0);
+    enemySpawner1 = _enemyCreater(true, Vector2.all(background.size.y * monstersScale), background.size.x);
+    enemySpawner2 = _enemyCreater(false, Vector2.all(background.size.y * monstersScale), 0);
 
     world = World(children: [background, archerPlayer, heartSpawner, enemySpawner1, enemySpawner2]);
     await add(world); 
@@ -129,11 +133,12 @@ class MiniGame extends FlameGame with HasKeyboardHandlerComponents, TapCallbacks
   // this method creates arrow everytime it called
   Arrow _arrowCreater() {
       return Arrow(
-        position: archerPlayer.position + Vector2(0, -18),
-        size: Vector2(48, 10),
+        position: archerPlayer.position + Vector2(0, -background.size.y * 0.03),
+        // 0.12 and 0.025 are the ratio of the arrow
+        size: Vector2(background.size.x * arrowScale * 0.12, background.size.y * arrowScale * 0.025),
         animation: _arrowAnimation(),
         anchor: Anchor.center
-      );
+      )..debugMode = false;
     }
 
   SpriteAnimation _arrowAnimation() {
@@ -150,7 +155,7 @@ class MiniGame extends FlameGame with HasKeyboardHandlerComponents, TapCallbacks
   SpawnComponent _enemyCreater(bool isSpawnRight, Vector2 enemySize, double positionX) {
     return SpawnComponent(
         factory: (index) {
-          return _enemyPickerForEnemyCreaterMethod(isSpawnRight, enemySize);
+          return _enemyPickerForEnemyCreaterMethod(isSpawnRight, enemySize)..debugMode = false;
         },
         period: miniGameBloc.state.enemySpawnPeriod,
         area: Rectangle.fromLTWH(positionX, 30, 0, background.size.y - 50),
@@ -159,16 +164,16 @@ class MiniGame extends FlameGame with HasKeyboardHandlerComponents, TapCallbacks
 
   dynamic _enemyPickerForEnemyCreaterMethod(bool isSpawnRight, Vector2 enemySize) {
     if(miniGameBloc.state.gameStage == 1) {
-      return Goblin(isSpawnRight: isSpawnRight, size: enemySize);
+      return Goblin(isSpawnRight: isSpawnRight, enemySize: enemySize);
     } else if(miniGameBloc.state.gameStage == 2) {
-      return Mushroom(isSpawnRight: isSpawnRight, size: enemySize);
+      return Mushroom(isSpawnRight: isSpawnRight, enemySize: enemySize);
     } else if(miniGameBloc.state.gameStage == 3) {
-      return FlyingEye(isSpawnRight: isSpawnRight, size: enemySize);
+      return FlyingEye(isSpawnRight: isSpawnRight, enemySize: enemySize);
     } else if(miniGameBloc.state.gameStage == 4) {
-      return Skeleton(isSpawnRight: isSpawnRight, size: enemySize);
+      return Skeleton(isSpawnRight: isSpawnRight, enemySize: enemySize);
     } 
     else {
-      return Goblin(isSpawnRight: isSpawnRight, size: enemySize);
+      return Goblin(isSpawnRight: isSpawnRight, enemySize: enemySize);
     }
   }
 
@@ -176,7 +181,7 @@ class MiniGame extends FlameGame with HasKeyboardHandlerComponents, TapCallbacks
     if(miniGameBloc.state.archerHelth < 100 && !miniGameBloc.state.isArcherDead){}
     return SpawnComponent(
       factory: (index) {
-        return Heart(animation: _heartAnimation(), anchor: Anchor.center);
+        return Heart(animation: _heartAnimation(), anchor: Anchor.center, size: Vector2.all(background.size.y * heartScale));
       },
       period: heartSpawnPeriod,
       area: Rectangle.fromLTWH(background.size.x / 12, background.size.y / 12, background.size.x * 0.8, background.size.y * 0.8),
@@ -202,8 +207,8 @@ class MiniGame extends FlameGame with HasKeyboardHandlerComponents, TapCallbacks
       enemySpawner2.removeFromParent();
     } else if (!miniGameBloc.state.isArcherDead && wasArcherDead){
       heartSpawner = _heartCreater();
-      enemySpawner1 = _enemyCreater(true, Vector2.all(280), background.size.x);
-      enemySpawner2 = _enemyCreater(false, Vector2.all(280), 0);
+      enemySpawner1 = _enemyCreater(true, Vector2.all(background.size.y * monstersScale), background.size.x);
+      enemySpawner2 = _enemyCreater(false, Vector2.all(background.size.y * monstersScale), 0);
 
       world.addAll({heartSpawner, enemySpawner1, enemySpawner2});
     }
@@ -259,8 +264,8 @@ class MiniGame extends FlameGame with HasKeyboardHandlerComponents, TapCallbacks
     enemySpawner1.removeFromParent();
     enemySpawner2.removeFromParent();
 
-    enemySpawner1 = _enemyCreater(true, Vector2.all(280), background.size.x,);
-    enemySpawner2 = _enemyCreater(false, Vector2.all(280), 0);
+    enemySpawner1 = _enemyCreater(true, Vector2.all(background.size.y * monstersScale), background.size.x,);
+    enemySpawner2 = _enemyCreater(false, Vector2.all(background.size.y * monstersScale), 0);
 
     world.addAll({enemySpawner1, enemySpawner2}); 
 
