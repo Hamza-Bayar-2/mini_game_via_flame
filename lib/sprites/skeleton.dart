@@ -40,27 +40,10 @@ class Skeleton extends SpriteAnimationGroupComponent with HasGameRef<MiniGame>, 
     }
 
     if(isDying || gameRef.miniGameBloc.state.gameStage != 4) {
-
-      if(bloodTimer.finished){
-        bloodTimer.pause();
-      } else {  
-        bloodTimer.resume();
-        bloodTimer.update(dt);
-        add(gameRef.bloodParticlesForMonsters(enemySize * 0.50));
-      }
-
-      rectangleHitbox.removeFromParent();
-      skeletonDeathTimer.resume();
-      skeletonDeathTimer.update(dt);
-      current = SkeletonState.death;
-      if(skeletonDeathTimer.finished){
-        removeFromParent();
-        skeletonDeathTimer.stop();
-      }
+      _bloodParticles(dt);
+      _skeletonDeath(dt);
     } else {
-
-      _skeletonSpawner(dt);
-
+      _skeletonMovement(dt);
     }
 
     super.update(dt);
@@ -102,7 +85,7 @@ class Skeleton extends SpriteAnimationGroupComponent with HasGameRef<MiniGame>, 
     );
   }
   
-  void _skeletonSpawner(double dt) {
+  void _skeletonMovement(double dt) {
     Vector2 velocity = Vector2.zero();  
     double directionX = 0.0;
 
@@ -115,8 +98,8 @@ class Skeleton extends SpriteAnimationGroupComponent with HasGameRef<MiniGame>, 
       current = SkeletonState.run;
 
       if(position.x < 0) {
-      removeFromParent(); 
-    }
+        removeFromParent(); 
+      }
     } else {
       directionX += skeletonSpeed;
       if(!isSkeletonFacingRight){
@@ -132,5 +115,26 @@ class Skeleton extends SpriteAnimationGroupComponent with HasGameRef<MiniGame>, 
 
     velocity = Vector2(directionX, 0);
     position.add(velocity * dt);
+  }
+
+  void _bloodParticles(double dt) {
+    if(bloodTimer.finished){
+      bloodTimer.pause();
+    } else {  
+      bloodTimer.resume();
+      bloodTimer.update(dt);
+      add(gameRef.bloodParticlesForMonsters(enemySize * 0.45));
+    }
+  }
+
+  void _skeletonDeath(double dt) {
+    rectangleHitbox.removeFromParent();
+    skeletonDeathTimer.resume();
+    skeletonDeathTimer.update(dt);
+    current = SkeletonState.death;
+    if(skeletonDeathTimer.finished){
+      removeFromParent();
+      skeletonDeathTimer.stop();
+    }
   }
 }

@@ -40,33 +40,16 @@ class Mushroom extends SpriteAnimationGroupComponent with HasGameRef<MiniGame>, 
     }
 
     if(isDying || gameRef.miniGameBloc.state.gameStage != 2) {
-
-      if(bloodTimer.finished){
-        bloodTimer.pause();
-      } else {  
-        bloodTimer.resume();
-        bloodTimer.update(dt);
-        add(gameRef.bloodParticlesForMonsters(enemySize * 0.55));
-      }
-
-      rectangleHitbox.removeFromParent();
-      mushroomDeathTimer.resume();
-      mushroomDeathTimer.update(dt);
-      current = MushroomState.death;
-      if(mushroomDeathTimer.finished){
-        removeFromParent();
-        mushroomDeathTimer.stop();
-      }
+      _bloodParticles(dt);
+      _mushroomDeath(dt);
     } else {
-
-      _mushroomSpawner(dt);
-
+      _mushroomMovement(dt);
     }
 
     super.update(dt);
   }
 
-    @override
+  @override
   void onCollision(Set<Vector2> intersectionPoints, PositionComponent other) {
     if(other is Arrow && !isDying){
       isDying = true;
@@ -102,7 +85,7 @@ class Mushroom extends SpriteAnimationGroupComponent with HasGameRef<MiniGame>, 
     );
   }
 
-  void _mushroomSpawner(double dt) {
+  void _mushroomMovement(double dt) {
     Vector2 velocity = Vector2.zero();  
     double directionX = 0.0;
 
@@ -115,8 +98,8 @@ class Mushroom extends SpriteAnimationGroupComponent with HasGameRef<MiniGame>, 
       current = MushroomState.run;
 
       if(position.x < 0) {
-      removeFromParent(); 
-    }
+        removeFromParent(); 
+      }
     } else {
       directionX += mushroomSpeed;
       if(!isMushroomFacingRight){
@@ -132,5 +115,26 @@ class Mushroom extends SpriteAnimationGroupComponent with HasGameRef<MiniGame>, 
 
     velocity = Vector2(directionX, 0);
     position.add(velocity * dt);
+  }
+
+  void _bloodParticles(double dt) {
+    if(bloodTimer.finished){
+      bloodTimer.pause();
+    } else {  
+      bloodTimer.resume();
+      bloodTimer.update(dt);
+      add(gameRef.bloodParticlesForMonsters(enemySize * 0.45));
+    }
+  }
+
+  void _mushroomDeath(double dt) {
+    rectangleHitbox.removeFromParent();
+    mushroomDeathTimer.resume();
+    mushroomDeathTimer.update(dt);
+    current = MushroomState.death;
+    if(mushroomDeathTimer.finished){
+      removeFromParent();
+      mushroomDeathTimer.stop();
+    }
   }
 }

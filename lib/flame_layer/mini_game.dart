@@ -259,7 +259,6 @@ class MiniGame extends FlameGame with HasKeyboardHandlerComponents, TapCallbacks
 
     world.addAll({enemySpawner1, enemySpawner2}); 
 
-    print("ekleme yapildi");
   }
 
   // this method will be used when the difficulty changes
@@ -274,7 +273,7 @@ class MiniGame extends FlameGame with HasKeyboardHandlerComponents, TapCallbacks
     // this works when the player press exit on the pause page
     if(miniGameBloc.state.isTheGameReset){
       
-      // this make the isTheGamereset => false
+      // this makes the isTheGamereset => false
       miniGameBloc.add(NotResetAllGameEvent());
 
       _removeAndAddEnemySpawner();

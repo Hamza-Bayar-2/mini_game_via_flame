@@ -23,16 +23,13 @@ class Goblin extends SpriteAnimationGroupComponent with HasGameRef<MiniGame>, Co
   bool isDying = false;
   final Timer goblinDeathTimer = Timer(0.39);
   final Timer bloodTimer = Timer(0.1);
-  // late final rectangleHitbox = RectangleHitbox.relative(parentSize: enemySize, Vector2(0.15, 0.22), position: Vector2(120, 124));
-
-  late final RectangleHitbox hitbox;
+  // I used position because the hitbox does not placed well.
+  late final RectangleHitbox rectangleHitbox = RectangleHitbox.relative(parentSize: enemySize, Vector2(0.15, 0.22), position: enemySize * 0.45)..debugMode = false;
 
   @override
   Future<void> onLoad() async{
     _loadAnimation();
-    // I used position because the hitbox does not placed well.
-    hitbox = RectangleHitbox.relative(parentSize: enemySize, Vector2(0.15, 0.22), position: enemySize * 0.45)..debugMode = false;
-    add(hitbox);
+    add(rectangleHitbox);
     // add(runAwayHitbox);
     return super.onLoad();
   }
@@ -45,27 +42,10 @@ class Goblin extends SpriteAnimationGroupComponent with HasGameRef<MiniGame>, Co
     }
     
     if(isDying || gameRef.miniGameBloc.state.gameStage != 1) {
-      
-      if(bloodTimer.finished){
-        bloodTimer.pause();
-      } else {  
-        bloodTimer.resume();
-        bloodTimer.update(dt);
-        add(gameRef.bloodParticlesForMonsters(enemySize * 0.45));
-      }
-
-      hitbox.removeFromParent();
-      goblinDeathTimer.resume();
-      goblinDeathTimer.update(dt);
-      current = GoblinState.death;
-      if(goblinDeathTimer.finished){
-        removeFromParent();
-        goblinDeathTimer.stop();
-      }
+      _bloodParticles(dt);
+      _goblinDeath(dt);
     } else {
-
-      _goblinSpawner(dt);
-
+      _goblinMovement(dt);
     }
 
     super.update(dt);
@@ -107,7 +87,7 @@ void onCollision(Set<Vector2> intersectionPoints, PositionComponent other) {
     );
   }
   
-  void _goblinSpawner(double dt) {
+  void _goblinMovement(double dt) {
     Vector2 velocity = Vector2.zero();  
     double directionX = 0.0;
 
@@ -120,8 +100,8 @@ void onCollision(Set<Vector2> intersectionPoints, PositionComponent other) {
       current = GoblinState.run;
 
       if(position.x < 0) {
-      removeFromParent(); 
-    }
+        removeFromParent(); 
+      }
     } else {
       directionX += goblinSpeed;
       if(!isGoblinFacingRight){
@@ -137,5 +117,26 @@ void onCollision(Set<Vector2> intersectionPoints, PositionComponent other) {
 
     velocity = Vector2(directionX, 0);
     position.add(velocity * dt);
+  }
+
+  void _bloodParticles(double dt) {
+    if(bloodTimer.finished){
+      bloodTimer.pause();
+    } else {  
+      bloodTimer.resume();
+      bloodTimer.update(dt);
+      add(gameRef.bloodParticlesForMonsters(enemySize * 0.45));
+    }
+  }
+
+  void _goblinDeath(double dt) {
+    rectangleHitbox.removeFromParent();
+    goblinDeathTimer.resume();
+    goblinDeathTimer.update(dt);
+    current = GoblinState.death;
+    if(goblinDeathTimer.finished){
+      removeFromParent();
+      goblinDeathTimer.stop();
+    }
   }
 }

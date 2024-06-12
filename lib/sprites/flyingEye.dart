@@ -42,27 +42,10 @@ class FlyingEye extends SpriteAnimationGroupComponent with HasGameRef<MiniGame>,
     }
 
     if(isDying || gameRef.miniGameBloc.state.gameStage != 3) {
-
-      if(bloodTimer.finished){
-        bloodTimer.pause();
-      } else {  
-        bloodTimer.resume();
-        bloodTimer.update(dt);
-        add(gameRef.bloodParticlesForMonsters(enemySize * 0.55));
-      }
-
-      rectangleHitbox.removeFromParent();
-      flyingEyeDeathTimer.resume();
-      flyingEyeDeathTimer.update(dt);
-      current = FlyingEyeState.death;
-      if(flyingEyeDeathTimer.finished){
-        removeFromParent();
-        flyingEyeDeathTimer.stop();
-      }
+      _bloodParticles(dt);
+      _flyingEyeDeath(dt);
     } else {
-
-      _flyingEyeSpawner(dt);
-
+      _flyingEyeMovement(dt);
     }
 
     super.update(dt);
@@ -104,7 +87,7 @@ class FlyingEye extends SpriteAnimationGroupComponent with HasGameRef<MiniGame>,
     );
   }
   
-  void _flyingEyeSpawner(double dt) {
+  void _flyingEyeMovement(double dt) {
     Vector2 velocity = Vector2.zero();  
     double directionX = 0.0;
 
@@ -117,8 +100,8 @@ class FlyingEye extends SpriteAnimationGroupComponent with HasGameRef<MiniGame>,
       current = FlyingEyeState.run;
 
       if(position.x < 0) {
-      removeFromParent(); 
-    }
+        removeFromParent(); 
+      }
     } else {
       directionX += flyingEyeSpeed;
       if(!isFlyingEyeFacingRight){
@@ -134,5 +117,26 @@ class FlyingEye extends SpriteAnimationGroupComponent with HasGameRef<MiniGame>,
 
     velocity = Vector2(directionX, 0);
     position.add(velocity * dt);
+  }
+
+  void _bloodParticles(double dt) {
+    if(bloodTimer.finished){
+      bloodTimer.pause();
+    } else {  
+      bloodTimer.resume();
+      bloodTimer.update(dt);
+      add(gameRef.bloodParticlesForMonsters(enemySize * 0.45));
+    }
+  }
+
+  void _flyingEyeDeath(double dt) {
+    rectangleHitbox.removeFromParent();
+    flyingEyeDeathTimer.resume();
+    flyingEyeDeathTimer.update(dt);
+    current = FlyingEyeState.death;
+    if(flyingEyeDeathTimer.finished){
+      removeFromParent();
+      flyingEyeDeathTimer.stop();
+    }
   }
 }
