@@ -72,7 +72,7 @@ class FlyingEye extends SpriteAnimationGroupComponent with HasGameRef<MiniGame>,
   void onCollision(Set<Vector2> intersectionPoints, PositionComponent other) {
     if(other is Arrow && !isDying){
       isDying = true;
-      FlameAudio.play("flyingEyeDeath.mp3");
+      FlameAudio.play("flyingEyeDeath.mp3", volume: 0.7);
     } 
     else if (other is ArcherPlayer) {
       removeFromParent();

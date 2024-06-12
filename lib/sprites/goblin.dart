@@ -3,8 +3,6 @@ import 'package:flame/collisions.dart';
 import 'package:flame/components.dart';
 import 'package:flame_audio/flame_audio.dart';
 import 'package:mini_game_via_flame/flame_layer/mini_game.dart';
-import 'package:mini_game_via_flame/hit_boxes/killHitbox.dart';
-import 'package:mini_game_via_flame/hit_boxes/runAwayHitbox.dart';
 import 'package:mini_game_via_flame/sprites/archer.dart';
 import 'package:mini_game_via_flame/sprites/arrow.dart';
 
@@ -27,16 +25,14 @@ class Goblin extends SpriteAnimationGroupComponent with HasGameRef<MiniGame>, Co
   final Timer bloodTimer = Timer(0.1);
   // late final rectangleHitbox = RectangleHitbox.relative(parentSize: enemySize, Vector2(0.15, 0.22), position: Vector2(120, 124));
 
-  late final KillHitbox killHitbox;
-  late final RunAwayHitbox runAwayHitbox;
+  late final RectangleHitbox hitbox;
 
   @override
   Future<void> onLoad() async{
     _loadAnimation();
     // I used position because the hitbox does not placed well.
-    killHitbox = KillHitbox.relative(parentSize: enemySize, relation: Vector2(0.15, 0.22), position: enemySize * 0.45)..debugMode = true;
-    runAwayHitbox = RunAwayHitbox.relative(parentSize: enemySize, relation: Vector2(0.6, 0.22),)..debugMode = true;
-    add(killHitbox);
+    hitbox = RectangleHitbox.relative(parentSize: enemySize, Vector2(0.15, 0.22), position: enemySize * 0.45)..debugMode = false;
+    add(hitbox);
     // add(runAwayHitbox);
     return super.onLoad();
   }
@@ -58,7 +54,7 @@ class Goblin extends SpriteAnimationGroupComponent with HasGameRef<MiniGame>, Co
         add(gameRef.bloodParticlesForMonsters(enemySize * 0.45));
       }
 
-      killHitbox.removeFromParent();
+      hitbox.removeFromParent();
       goblinDeathTimer.resume();
       goblinDeathTimer.update(dt);
       current = GoblinState.death;

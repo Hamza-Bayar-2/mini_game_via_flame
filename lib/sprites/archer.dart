@@ -11,7 +11,6 @@ import 'package:flame_audio/flame_audio.dart';
 import 'package:flutter/src/services/raw_keyboard.dart';
 import 'package:mini_game_via_flame/blocs/mini_game/mini_game_bloc.dart';
 import 'package:mini_game_via_flame/flame_layer/mini_game.dart';
-import 'package:mini_game_via_flame/hit_boxes/killHitbox.dart';
 import 'package:mini_game_via_flame/sprites/flyingEye.dart';
 import 'package:mini_game_via_flame/sprites/goblin.dart';
 import 'package:mini_game_via_flame/sprites/heart.dart';
@@ -45,12 +44,13 @@ class ArcherPlayer extends SpriteAnimationGroupComponent with HasGameRef<MiniGam
   );
   late int previousArcherHealth = gameRef.miniGameBloc.state.archerHelth;
   late final Decorator decoratorForArcher;
-
+  late final RectangleHitbox hitbox;
 
   @override
   Future<void> onLoad() async {
+    hitbox = RectangleHitbox.relative(Vector2(0.25,0.30), parentSize: size, anchor: Anchor.center)..debugMode = false;
+    add(hitbox);
     _loadAnimation();
-    add(RectangleHitbox.relative(Vector2(0.25,0.30), parentSize: size, anchor: Anchor.center));
     gameRef.cameraComponent.viewfinder.add(cameraShake);
     cameraShake.pause();
     // this decorator belongs to the archer
@@ -315,33 +315,32 @@ class ArcherPlayer extends SpriteAnimationGroupComponent with HasGameRef<MiniGam
   }
 
   void _updateArcherDecorator(double dt) {
-  archerHelathIncreaseCountdown.update(dt);
+    archerHelathIncreaseCountdown.update(dt);
 
-  bool isLowHealth = gameRef.miniGameBloc.state.archerHelth <= 20;
-  
-  if (isArcherHealthIncreased) {
-    // Apply green tint when health is increased
-    archerHelathIncreaseCountdown.start();
-    decoratorForArcher.replaceLast(PaintDecorator.tint(const Color.fromARGB(143, 92, 255, 92)));
-    isArcherHealthIncreased = false;
-  } else if (archerHelathIncreaseCountdown.finished) {
-    // Revert to red tint if health is low, or clear the tint if health is not low
-    if (isLowHealth) {
+    bool isLowHealth = gameRef.miniGameBloc.state.archerHelth <= 20;
+    
+    if (isArcherHealthIncreased) {
+      // Apply green tint when health is increased
+      archerHelathIncreaseCountdown.start();
+      decoratorForArcher.replaceLast(PaintDecorator.tint(const Color.fromARGB(143, 92, 255, 92)));
+      isArcherHealthIncreased = false;
+    } else if (archerHelathIncreaseCountdown.finished) {
+      // Revert to red tint if health is low, or clear the tint if health is not low
+      if (isLowHealth) {
+        decoratorForArcher.replaceLast(PaintDecorator.tint(const Color.fromARGB(93, 255, 0, 0)));
+      } else {
+        decoratorForArcher.replaceLast(null);
+      }
+      archerHelathIncreaseCountdown.stop();
+    } else if (isLowHealth && previousArcherHealth != gameRef.miniGameBloc.state.archerHelth && !gameRef.miniGameBloc.state.isArcherDead) {
+      // Apply red tint when health is low
       decoratorForArcher.replaceLast(PaintDecorator.tint(const Color.fromARGB(93, 255, 0, 0)));
-    } else {
+    } else if (!isLowHealth && previousArcherHealth != gameRef.miniGameBloc.state.archerHelth) {
+      // Remove the tint if the health is no longer low and health is not increased
       decoratorForArcher.replaceLast(null);
     }
-    archerHelathIncreaseCountdown.stop();
-  } else if (isLowHealth && previousArcherHealth != gameRef.miniGameBloc.state.archerHelth && !gameRef.miniGameBloc.state.isArcherDead) {
-    // Apply red tint when health is low
-    decoratorForArcher.replaceLast(PaintDecorator.tint(const Color.fromARGB(93, 255, 0, 0)));
-  } else if (!isLowHealth && previousArcherHealth != gameRef.miniGameBloc.state.archerHelth) {
-    // Remove the tint if the health is no longer low and health is not increased
-    decoratorForArcher.replaceLast(null);
+
+    previousArcherHealth = gameRef.miniGameBloc.state.archerHelth;
   }
-
-  previousArcherHealth = gameRef.miniGameBloc.state.archerHelth;
-}
-
 
 }

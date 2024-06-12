@@ -13,6 +13,7 @@ import 'package:flutter/src/services/raw_keyboard.dart';
 import 'package:flutter/src/widgets/focus_manager.dart';
 import 'package:flutter/widgets.dart';
 import 'package:mini_game_via_flame/blocs/mini_game/mini_game_bloc.dart';
+import 'package:mini_game_via_flame/pools/arrow_pool.dart';
 import 'package:mini_game_via_flame/sprites/archer.dart';
 import 'package:mini_game_via_flame/sprites/arrow.dart';
 import 'package:mini_game_via_flame/sprites/flyingEye.dart';
@@ -49,21 +50,22 @@ class MiniGame extends FlameGame with HasKeyboardHandlerComponents, TapCallbacks
   final archerScale = 0.3;
   final monstersScale = 0.44;
   final arrowScale = 0.35;
-  final heartScale = 0.06;
-
-  // add(FlameBlocProvider.value(value: miniGameBloc, children: [archerPlayer]));
+  final heartScale = 0.05;
+  late final ArrowPool arrowPool;
+  late Arrow arrow;
 
   @override
   Future<void> onLoad() async{
     await FlameAudio.audioCache.loadAll(['running.mp3', 'arrow.mp3', 'death.mp3', 'hurt.mp3', 'monsterDeath.mp3', 'bgm.mp3', 'powerUp.mp3', 'win.mp3', 'lose.mp3', 'skeletonDeath.mp3', 'skeletonDeath2.mp3', 'mushroomDeath.mp3', 'flyingEyeDeath.mp3']);
     await images.loadAllImages();
     background = SpriteComponent(sprite: Sprite(images.fromCache("background.png")), size: size);
-    archerPlayer = ArcherPlayer(size: Vector2.all(background.size.y * archerScale), position: Vector2(background.size.x / 2, background.size.y / 2))..debugMode = true;
+    archerPlayer = ArcherPlayer(size: Vector2.all(background.size.y * archerScale), position: Vector2(background.size.x / 2, background.size.y / 2));
     heartSpawner = _heartCreater();
     enemySpawner1 = _enemyCreater(true, Vector2.all(background.size.y * monstersScale), background.size.x);
     enemySpawner2 = _enemyCreater(false, Vector2.all(background.size.y * monstersScale), 0);
+    arrowPool = ArrowPool();
 
-    world = World(children: [background, archerPlayer, heartSpawner, enemySpawner1, enemySpawner2]);
+    world = World(children: [background, archerPlayer, heartSpawner, enemySpawner1, enemySpawner2, arrowPool]);
     await add(world); 
     cameraComponent = CameraComponent.withFixedResolution(
       width: size.x,
@@ -87,6 +89,7 @@ class MiniGame extends FlameGame with HasKeyboardHandlerComponents, TapCallbacks
       pauseEngine();
     }
 
+    _difficultyLevelChange();
     _resetAllGame();
     _arrowManager(dt);
     _gameStageManager();
@@ -115,41 +118,28 @@ class MiniGame extends FlameGame with HasKeyboardHandlerComponents, TapCallbacks
     return super.onKeyEvent(event, keysPressed);
   }
 
-  void _arrowManager(double dt) {
+  Future<void> _arrowManager(double dt) async {
     if((miniGameBloc.state.isSpaceKeyPressing) && !miniGameBloc.state.isArcherDead) {
       countdownAndRepeat.update(dt);
       countdownAndRepeat.resume();
-      // when the time is up the arrow is released
+      // when the time is up the arrow will be throwen
       if(countdownAndRepeat.finished) {
-        world.add(_arrowCreater());
+        arrow = arrowPool.acquire();
+        // the retun arrow could be a new arrow
+        // so first we check if the world has this arrow, if not we add it to the world
+        if(!world.children.contains(arrow)) {
+          await world.add(arrow);
+        }
+        // after the arrow is ready it will be fired
+        arrow.fire();
         FlameAudio.play("arrow.mp3");
         countdownAndRepeat.start();
+        // from here we can check how many arrow dose the pool has
+        print(arrowPool.poolLength);
       }
     } else {
       countdownAndRepeat.stop();
     } 
-  }
-
-  // this method creates arrow everytime it called
-  Arrow _arrowCreater() {
-      return Arrow(
-        position: archerPlayer.position + Vector2(0, -background.size.y * 0.03),
-        // 0.12 and 0.025 are the ratio of the arrow
-        size: Vector2(background.size.x * arrowScale * 0.12, background.size.y * arrowScale * 0.025),
-        animation: _arrowAnimation(),
-        anchor: Anchor.center
-      )..debugMode = false;
-    }
-
-  SpriteAnimation _arrowAnimation() {
-    return SpriteAnimation.fromFrameData(
-      images.fromCache("Archer/Arrow/Move.png"),
-      SpriteAnimationData.sequenced(
-        amount: 2,
-        stepTime: 0.07,
-        textureSize: Vector2(24, 5),
-      ),
-    );
   }
 
   SpawnComponent _enemyCreater(bool isSpawnRight, Vector2 enemySize, double positionX) {
@@ -178,7 +168,6 @@ class MiniGame extends FlameGame with HasKeyboardHandlerComponents, TapCallbacks
   }
 
   SpawnComponent _heartCreater() {
-    if(miniGameBloc.state.archerHelth < 100 && !miniGameBloc.state.isArcherDead){}
     return SpawnComponent(
       factory: (index) {
         return Heart(animation: _heartAnimation(), anchor: Anchor.center, size: Vector2.all(background.size.y * heartScale));
@@ -260,6 +249,7 @@ class MiniGame extends FlameGame with HasKeyboardHandlerComponents, TapCallbacks
   // when the player moves to the next stage 
   // the new spawner with the new monster will be added 
   // and the previous one will be removed
+  // this also used when the game difficulty changes
   void _removeAndAddEnemySpawner() {
     enemySpawner1.removeFromParent();
     enemySpawner2.removeFromParent();
@@ -269,6 +259,15 @@ class MiniGame extends FlameGame with HasKeyboardHandlerComponents, TapCallbacks
 
     world.addAll({enemySpawner1, enemySpawner2}); 
 
+    print("ekleme yapildi");
+  }
+
+  // this method will be used when the difficulty changes
+  void _difficultyLevelChange() {
+    if(miniGameBloc.state.difficultyLevel != previousDifficultyLevel) {
+      _removeAndAddEnemySpawner();
+    }
+    previousDifficultyLevel = miniGameBloc.state.difficultyLevel;
   }
 
   void _resetAllGame() {

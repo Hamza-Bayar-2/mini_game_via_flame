@@ -17,24 +17,15 @@ class Heart extends SpriteAnimationComponent with HasGameRef<MiniGame>, Collisio
   }) : super(animation: animation, position: position, size: size, anchor: anchor);
 
   Timer heartDisappearTimer = Timer(3.5);
+  late final RectangleHitbox hitbox;
+  late final SizeEffect sizeEffect;
 
   @override
   FutureOr<void> onLoad() {
-    add(
-      RectangleHitbox.relative(
-        parentSize: size, 
-        Vector2(1, 1), 
-        anchor: Anchor.center
-      )..debugMode = false
-    );
+    hitbox = RectangleHitbox.relative(parentSize: size, Vector2(1, 1), anchor: Anchor.center)..debugMode = false;
+    sizeEffect = SizeEffect.to(size * 1.3, EffectController(duration: 0.5, alternate: true, infinite: true));
 
-    add(
-      SizeEffect.to(
-        size * 1.3,
-        EffectController(duration: 0.5, alternate: true, infinite: true),
-      )
-    );
-
+    addAll({hitbox, sizeEffect});
     return super.onLoad();
   }
 
