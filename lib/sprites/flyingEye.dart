@@ -8,7 +8,7 @@ import 'package:mini_game_via_flame/sprites/arrow.dart';
 
 enum FlyingEyeState {run, death, attack}
 
-class FlyingEye extends SpriteAnimationGroupComponent with HasGameRef<MiniGame>, CollisionCallbacks{
+class FlyingEye extends SpriteAnimationGroupComponent with HasGameRef<MiniGame>, CollisionCallbacks, HasVisibility{
   bool isSpawnRight;
   Vector2 enemySize;
   FlyingEye({
@@ -31,6 +31,7 @@ class FlyingEye extends SpriteAnimationGroupComponent with HasGameRef<MiniGame>,
   Future<void> onLoad() async {
     _loadAnimation();
     add(rectangleHitbox);
+    deactivate();
     return super.onLoad();
   }
 
@@ -38,14 +39,19 @@ class FlyingEye extends SpriteAnimationGroupComponent with HasGameRef<MiniGame>,
   void update(double dt) { 
     
     if(gameRef.miniGameBloc.state.isArcherDead || gameRef.miniGameBloc.state.isTheGameReset) {
-      removeFromParent();
+      // removeFromParent();
+      deactivate();
     }
 
-    if(isDying || gameRef.miniGameBloc.state.gameStage != 3) {
-      _bloodParticles(dt);
-      _flyingEyeDeath(dt);
+    if(isVisible) {
+      if(isDying || gameRef.miniGameBloc.state.gameStage != 3) {
+        _bloodParticles(dt);
+        _flyingEyeDeath(dt);
+      } else {
+        _flyingEyeMovement(dt);
+      }
     } else {
-      _flyingEyeMovement(dt);
+      bloodTimer.reset();
     }
 
     super.update(dt);
@@ -58,7 +64,8 @@ class FlyingEye extends SpriteAnimationGroupComponent with HasGameRef<MiniGame>,
       FlameAudio.play("flyingEyeDeath.mp3", volume: 0.7);
     } 
     else if (other is ArcherPlayer) {
-      removeFromParent();
+      // removeFromParent();
+      deactivate();
     }
     super.onCollision(intersectionPoints, other);
   }
@@ -100,7 +107,9 @@ class FlyingEye extends SpriteAnimationGroupComponent with HasGameRef<MiniGame>,
       current = FlyingEyeState.run;
 
       if(position.x < 0) {
-        removeFromParent(); 
+        // removeFromParent(); 
+        deactivate();
+        position = Vector2(gameRef.background.size.x, 0);
       }
     } else {
       directionX += flyingEyeSpeed;
@@ -111,7 +120,9 @@ class FlyingEye extends SpriteAnimationGroupComponent with HasGameRef<MiniGame>,
       current = FlyingEyeState.run;
 
       if(position.x > gameRef.background.size.x) {
-        removeFromParent(); 
+        // removeFromParent(); 
+        deactivate();
+        position = Vector2(0, 0);
       }
     }
 
@@ -130,13 +141,26 @@ class FlyingEye extends SpriteAnimationGroupComponent with HasGameRef<MiniGame>,
   }
 
   void _flyingEyeDeath(double dt) {
-    rectangleHitbox.removeFromParent();
+    // rectangleHitbox.removeFromParent();
+    rectangleHitbox.collisionType = CollisionType.inactive;
     flyingEyeDeathTimer.resume();
     flyingEyeDeathTimer.update(dt);
     current = FlyingEyeState.death;
     if(flyingEyeDeathTimer.finished){
-      removeFromParent();
+      // removeFromParent();
+      deactivate();
+      isDying = false;
       flyingEyeDeathTimer.stop();
     }
+  }
+
+  void activate() {
+    isVisible = true;
+    rectangleHitbox.collisionType = CollisionType.active;
+  } 
+  
+  void deactivate() {
+    isVisible = false;
+    rectangleHitbox.collisionType = CollisionType.inactive;
   }
 }

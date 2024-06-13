@@ -8,7 +8,7 @@ import 'package:mini_game_via_flame/sprites/arrow.dart';
 
 enum SkeletonState {run, death, attack}
 
-class Skeleton extends SpriteAnimationGroupComponent with HasGameRef<MiniGame>, CollisionCallbacks{
+class Skeleton extends SpriteAnimationGroupComponent with HasGameRef<MiniGame>, CollisionCallbacks, HasVisibility{
   bool isSpawnRight;
   Vector2 enemySize;
   Skeleton({
@@ -29,6 +29,7 @@ class Skeleton extends SpriteAnimationGroupComponent with HasGameRef<MiniGame>, 
   FutureOr<void> onLoad() {
     _loadAnimation();
     add(rectangleHitbox);
+    deactivate();
     return super.onLoad();
   }
 
@@ -36,14 +37,18 @@ class Skeleton extends SpriteAnimationGroupComponent with HasGameRef<MiniGame>, 
   void update(double dt) { 
     
     if(gameRef.miniGameBloc.state.isArcherDead || gameRef.miniGameBloc.state.isTheGameReset) {
-      removeFromParent();
+      deactivate();
     }
 
-    if(isDying || gameRef.miniGameBloc.state.gameStage != 4) {
-      _bloodParticles(dt);
-      _skeletonDeath(dt);
+    if(isVisible) {
+      if(isDying || gameRef.miniGameBloc.state.gameStage != 4) {
+        _bloodParticles(dt);
+        _skeletonDeath(dt);
+      } else {
+        _skeletonMovement(dt);
+      }
     } else {
-      _skeletonMovement(dt);
+      bloodTimer.reset();
     }
 
     super.update(dt);
@@ -56,7 +61,7 @@ class Skeleton extends SpriteAnimationGroupComponent with HasGameRef<MiniGame>, 
       FlameAudio.play("skeletonDeath.mp3");
     } 
     else if (other is ArcherPlayer) {
-      removeFromParent();
+      deactivate();
     }
     super.onCollision(intersectionPoints, other);
   }
@@ -98,7 +103,8 @@ class Skeleton extends SpriteAnimationGroupComponent with HasGameRef<MiniGame>, 
       current = SkeletonState.run;
 
       if(position.x < 0) {
-        removeFromParent(); 
+        deactivate();
+        position = Vector2(gameRef.background.size.x, 0);
       }
     } else {
       directionX += skeletonSpeed;
@@ -109,7 +115,8 @@ class Skeleton extends SpriteAnimationGroupComponent with HasGameRef<MiniGame>, 
       current = SkeletonState.run;
 
       if(position.x > gameRef.background.size.x) {
-        removeFromParent(); 
+        deactivate();
+        position = Vector2(0, 0);
       }
     }
 
@@ -128,13 +135,24 @@ class Skeleton extends SpriteAnimationGroupComponent with HasGameRef<MiniGame>, 
   }
 
   void _skeletonDeath(double dt) {
-    rectangleHitbox.removeFromParent();
+    rectangleHitbox.collisionType = CollisionType.inactive;
     skeletonDeathTimer.resume();
     skeletonDeathTimer.update(dt);
     current = SkeletonState.death;
     if(skeletonDeathTimer.finished){
-      removeFromParent();
+      deactivate();
+      isDying = false;
       skeletonDeathTimer.stop();
     }
+  }
+
+  void activate() {
+    isVisible = true;
+    rectangleHitbox.collisionType = CollisionType.active;
+  } 
+  
+  void deactivate() {
+    isVisible = false;
+    rectangleHitbox.collisionType = CollisionType.inactive;
   }
 }

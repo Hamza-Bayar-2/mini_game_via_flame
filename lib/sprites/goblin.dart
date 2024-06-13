@@ -8,7 +8,7 @@ import 'package:mini_game_via_flame/sprites/arrow.dart';
 
 enum GoblinState {run, death, attack}
 
-class Goblin extends SpriteAnimationGroupComponent with HasGameRef<MiniGame>, CollisionCallbacks{
+class Goblin extends SpriteAnimationGroupComponent with HasGameRef<MiniGame>, CollisionCallbacks, HasVisibility{
   bool isSpawnRight;
   Vector2 enemySize;
   Goblin({
@@ -30,7 +30,7 @@ class Goblin extends SpriteAnimationGroupComponent with HasGameRef<MiniGame>, Co
   Future<void> onLoad() async{
     _loadAnimation();
     add(rectangleHitbox);
-    // add(runAwayHitbox);
+    deactivate();
     return super.onLoad();
   }
 
@@ -38,14 +38,19 @@ class Goblin extends SpriteAnimationGroupComponent with HasGameRef<MiniGame>, Co
   void update(double dt) { 
 
     if(gameRef.miniGameBloc.state.isArcherDead || gameRef.miniGameBloc.state.isTheGameReset) {
-      removeFromParent();
+      deactivate();
     }
     
-    if(isDying || gameRef.miniGameBloc.state.gameStage != 1) {
-      _bloodParticles(dt);
-      _goblinDeath(dt);
+    if(isVisible) {
+      if(isDying || gameRef.miniGameBloc.state.gameStage != 1) {
+        _bloodParticles(dt);
+        _goblinDeath(dt);
+      } else {
+        _goblinMovement(dt);
+      }
     } else {
-      _goblinMovement(dt);
+      // whitout this line the blood particles will not work again
+      bloodTimer.reset();
     }
 
     super.update(dt);
@@ -58,7 +63,7 @@ void onCollision(Set<Vector2> intersectionPoints, PositionComponent other) {
     isDying = true;
     FlameAudio.play("monsterDeath.mp3");
   } else if (other is ArcherPlayer) {
-    removeFromParent();
+    deactivate();
   }
   super.onCollision(intersectionPoints, other);
 }
@@ -100,7 +105,13 @@ void onCollision(Set<Vector2> intersectionPoints, PositionComponent other) {
       current = GoblinState.run;
 
       if(position.x < 0) {
-        removeFromParent(); 
+        deactivate();
+        // This line prevents the goblin from being deactivated as soon as it is added.
+        // When the goblin wants to be used again and activate it, 
+        // it will be at the border of the wall where it was deactivated, 
+        // even if only for a very short time. 
+        // This may cause the goblin to be deactivated before it reaches where it should be spawned.
+        position = Vector2(gameRef.background.size.x, 0);
       }
     } else {
       directionX += goblinSpeed;
@@ -111,7 +122,8 @@ void onCollision(Set<Vector2> intersectionPoints, PositionComponent other) {
       current = GoblinState.run;
 
       if(position.x > gameRef.background.size.x) {
-        removeFromParent(); 
+        deactivate();
+        position = Vector2(0, 0);
       }
     }
 
@@ -122,7 +134,7 @@ void onCollision(Set<Vector2> intersectionPoints, PositionComponent other) {
   void _bloodParticles(double dt) {
     if(bloodTimer.finished){
       bloodTimer.pause();
-    } else {  
+    } else {
       bloodTimer.resume();
       bloodTimer.update(dt);
       add(gameRef.bloodParticlesForMonsters(enemySize * 0.45));
@@ -130,13 +142,24 @@ void onCollision(Set<Vector2> intersectionPoints, PositionComponent other) {
   }
 
   void _goblinDeath(double dt) {
-    rectangleHitbox.removeFromParent();
+    rectangleHitbox.collisionType = CollisionType.inactive;
     goblinDeathTimer.resume();
     goblinDeathTimer.update(dt);
     current = GoblinState.death;
     if(goblinDeathTimer.finished){
-      removeFromParent();
+      deactivate();
+      isDying = false;
       goblinDeathTimer.stop();
     }
+  }
+
+  void activate() {
+    isVisible = true;
+    rectangleHitbox.collisionType = CollisionType.active;
+  } 
+  
+  void deactivate() {
+    isVisible = false;
+    rectangleHitbox.collisionType = CollisionType.inactive;
   }
 }

@@ -8,7 +8,7 @@ import 'package:mini_game_via_flame/sprites/arrow.dart';
 
 enum MushroomState {run, death, attack}
 
-class Mushroom extends SpriteAnimationGroupComponent with HasGameRef<MiniGame>, CollisionCallbacks{
+class Mushroom extends SpriteAnimationGroupComponent with HasGameRef<MiniGame>, CollisionCallbacks, HasVisibility{
   bool isSpawnRight;
   Vector2 enemySize;
   Mushroom({
@@ -29,6 +29,7 @@ class Mushroom extends SpriteAnimationGroupComponent with HasGameRef<MiniGame>, 
   FutureOr<void> onLoad() {
     _loadAnimation();
     add(rectangleHitbox);
+    deactivate();
     return super.onLoad();
   }
 
@@ -36,14 +37,18 @@ class Mushroom extends SpriteAnimationGroupComponent with HasGameRef<MiniGame>, 
   void update(double dt) { 
     
     if(gameRef.miniGameBloc.state.isArcherDead || gameRef.miniGameBloc.state.isTheGameReset) {
-      removeFromParent();
+      deactivate();
     }
 
-    if(isDying || gameRef.miniGameBloc.state.gameStage != 2) {
-      _bloodParticles(dt);
-      _mushroomDeath(dt);
+    if(isVisible) {
+      if(isDying || gameRef.miniGameBloc.state.gameStage != 2) {
+        _bloodParticles(dt);
+        _mushroomDeath(dt);
+      } else {
+        _mushroomMovement(dt);
+      }
     } else {
-      _mushroomMovement(dt);
+      bloodTimer.reset();
     }
 
     super.update(dt);
@@ -56,7 +61,7 @@ class Mushroom extends SpriteAnimationGroupComponent with HasGameRef<MiniGame>, 
       FlameAudio.play("mushroomDeath.mp3");
     } 
     else if (other is ArcherPlayer) {
-      removeFromParent();
+      deactivate();
     }
     super.onCollision(intersectionPoints, other);
   }
@@ -98,7 +103,8 @@ class Mushroom extends SpriteAnimationGroupComponent with HasGameRef<MiniGame>, 
       current = MushroomState.run;
 
       if(position.x < 0) {
-        removeFromParent(); 
+        deactivate();
+        position = Vector2(gameRef.background.size.x, 0);
       }
     } else {
       directionX += mushroomSpeed;
@@ -109,7 +115,8 @@ class Mushroom extends SpriteAnimationGroupComponent with HasGameRef<MiniGame>, 
       current = MushroomState.run;
 
       if(position.x > gameRef.background.size.x) {
-        removeFromParent(); 
+        deactivate();
+        position = Vector2(0, 0);
       }
     }
 
@@ -128,13 +135,24 @@ class Mushroom extends SpriteAnimationGroupComponent with HasGameRef<MiniGame>, 
   }
 
   void _mushroomDeath(double dt) {
-    rectangleHitbox.removeFromParent();
+    rectangleHitbox.collisionType = CollisionType.inactive;
     mushroomDeathTimer.resume();
     mushroomDeathTimer.update(dt);
     current = MushroomState.death;
     if(mushroomDeathTimer.finished){
-      removeFromParent();
+      deactivate();
+      isDying = false;
       mushroomDeathTimer.stop();
     }
+  }
+
+  void activate() {
+    isVisible = true;
+    rectangleHitbox.collisionType = CollisionType.active;
+  } 
+  
+  void deactivate() {
+    isVisible = false;
+    rectangleHitbox.collisionType = CollisionType.inactive;
   }
 }
