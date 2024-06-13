@@ -36,10 +36,7 @@ class MiniGame extends FlameGame with HasKeyboardHandlerComponents, TapCallbacks
   late SpawnComponent heartSpawner;
   late SpawnComponent enemySpawner1;
   late SpawnComponent enemySpawner2;
-  late bool wasArcherDead = miniGameBloc.state.isArcherDead;
   late int previousDifficultyLevel = miniGameBloc.state.difficultyLevel;
-  late int previousArcherHealth = miniGameBloc.state.archerHelth;
-  // late final Decorator decoratorForArcher;
   late final CameraComponent cameraComponent;
   @override
   late final World world;
@@ -93,7 +90,6 @@ class MiniGame extends FlameGame with HasKeyboardHandlerComponents, TapCallbacks
     _arrowManager(dt);
     _gameStageManager();
     _backgroundMusicManager();
-    _removeComponentWhenArcherDeadAndAddComponentWhenArcherRevive();
     super.update(dt);
   }
 
@@ -199,23 +195,6 @@ class MiniGame extends FlameGame with HasKeyboardHandlerComponents, TapCallbacks
     );
   }
 
-  void _removeComponentWhenArcherDeadAndAddComponentWhenArcherRevive() {
-
-    if(miniGameBloc.state.isArcherDead && !wasArcherDead){
-      heartSpawner.removeFromParent();
-      enemySpawner1.removeFromParent();
-      enemySpawner2.removeFromParent();
-    } else if (!miniGameBloc.state.isArcherDead && wasArcherDead){
-      heartSpawner = _heartSpawner();
-      enemySpawner1 = _enemySpawner(true, Vector2.all(background.size.y * monstersScale));
-      enemySpawner2 = _enemySpawner(false, Vector2.all(background.size.y * monstersScale));
-
-      world.addAll({heartSpawner, enemySpawner1, enemySpawner2});
-    }
-
-    wasArcherDead = miniGameBloc.state.isArcherDead;
-  }
-
   void _backgroundMusicManager() {
     if(miniGameBloc.state.flutterPage != 1 || miniGameBloc.state.isArcherDead) {
       backgroundMusic.pause();
@@ -229,24 +208,17 @@ class MiniGame extends FlameGame with HasKeyboardHandlerComponents, TapCallbacks
     if(miniGameBloc.state.monsterKillNumber % 40 == 10 && miniGameBloc.state.gameStage == 1) {
       // game stage will be 2
       miniGameBloc.add(NextGameStageEvent());
-      _removeAndAddEnemySpawner();
-
     } else if(miniGameBloc.state.monsterKillNumber % 40 == 20 && miniGameBloc.state.gameStage == 2) {
       // game stage will be 3
       miniGameBloc.add(NextGameStageEvent());
-      _removeAndAddEnemySpawner();
-
     } else if(miniGameBloc.state.monsterKillNumber % 40 == 30 && miniGameBloc.state.gameStage == 3) {
       // game stage will be 4 (final stage)
       miniGameBloc.add(NextGameStageEvent());
-      _removeAndAddEnemySpawner();
-
     } else if(miniGameBloc.state.monsterKillNumber % 40 == 0 && miniGameBloc.state.gameStage == 4) {
       // game stage will be reset to 1 
       miniGameBloc.add(ResetGameStageEvent());
-      _removeAndAddEnemySpawner();
       
-      // if the player plays gameMode 0 (finite mode) he will win the game
+      // if the player plays gameMode 0 (finite mode) the game will has a win case
       // otherwise the player will continuo playing.
       if(miniGameBloc.state.gameMode == 0) {
         // The player completed all 4 stages and won the game flutterPage => 3
@@ -269,7 +241,6 @@ class MiniGame extends FlameGame with HasKeyboardHandlerComponents, TapCallbacks
     enemySpawner2 = _enemySpawner(false, Vector2.all(background.size.y * monstersScale));
 
     world.addAll({enemySpawner1, enemySpawner2}); 
-
   }
 
   // this method will be used when the difficulty changes
@@ -283,12 +254,8 @@ class MiniGame extends FlameGame with HasKeyboardHandlerComponents, TapCallbacks
   void _resetAllGame() {
     // this works when the player press exit on the pause page
     if(miniGameBloc.state.isTheGameReset){
-      
       // this makes the isTheGamereset => false
       miniGameBloc.add(NotResetAllGameEvent());
-
-      _removeAndAddEnemySpawner();
-
     }
   }
 
