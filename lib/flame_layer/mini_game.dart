@@ -15,14 +15,11 @@ import 'package:mini_game_via_flame/pools/arrow_pool.dart';
 import 'package:mini_game_via_flame/pools/enemy_pool.dart';
 import 'package:mini_game_via_flame/sprites/archer.dart';
 import 'package:mini_game_via_flame/sprites/arrow.dart';
-import 'package:mini_game_via_flame/sprites/flyingEye.dart';
 import 'dart:async';
 import 'package:mini_game_via_flame/sprites/goblin.dart';
 import 'package:flame/experimental.dart';
 import 'package:flame/input.dart';
 import 'package:mini_game_via_flame/sprites/heart.dart';
-import 'package:mini_game_via_flame/sprites/mushroom.dart';
-import 'package:mini_game_via_flame/sprites/skeleton.dart';
 
 class MiniGame extends FlameGame with HasKeyboardHandlerComponents, TapCallbacks, DragCallbacks, HasCollisionDetection, HasDecorator{
   final MiniGameBloc miniGameBloc;
@@ -114,7 +111,7 @@ class MiniGame extends FlameGame with HasKeyboardHandlerComponents, TapCallbacks
       miniGameBloc.add(NotSpacePressingEvent());
     }
 
-    if(keysPressed.contains(LogicalKeyboardKey.escape)){
+    if(keysPressed.contains(LogicalKeyboardKey.escape) && miniGameBloc.state.flutterPage != 3){
       miniGameBloc.add(GoToPausePage());
     }
     return super.onKeyEvent(event, keysPressed);

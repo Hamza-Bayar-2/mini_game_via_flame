@@ -33,7 +33,7 @@ class MiniGameApp extends StatelessWidget {
                 iconSize: 24, 
               ))
               ),
-      debugShowCheckedModeBanner: true,
+      debugShowCheckedModeBanner: false,
       home: BlocProvider<MiniGameBloc>(
         create: (context) => MiniGameBloc(),
         child: const Scaffold(

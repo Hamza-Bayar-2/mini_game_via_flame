@@ -1,3 +1,5 @@
+import 'dart:ui';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:mini_game_via_flame/blocs/mini_game/mini_game_bloc.dart';
@@ -10,53 +12,56 @@ class PausePage extends StatelessWidget {
     return BlocBuilder<MiniGameBloc, MiniGameState>(
       builder: (context, state) {
         return Center(
-          child: Container(
-            padding: const EdgeInsets.all(30),
-            decoration: BoxDecoration(
-                color: const Color.fromRGBO(158, 158, 158, 1), borderRadius: BorderRadius.circular(10)),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Text(
-                  'Game Paused',
-                  style: TextStyle(
-                    fontSize: 32.0,
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(height: 20),
-                Container(
-                  padding: const EdgeInsets.all(10),
-                  decoration: BoxDecoration(
-                      color: Colors.blueAccent,
-                      borderRadius: BorderRadius.circular(10)),
-                  child: const Text(
-                    "Press SPACE to resume",
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 5.0, sigmaY: 5.0),
+            child: Container(
+              padding: const EdgeInsets.all(30),
+              decoration: BoxDecoration(
+                  color: const Color.fromRGBO(158, 158, 158, 1), borderRadius: BorderRadius.circular(10)),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Text(
+                    'Game Paused',
                     style: TextStyle(
+                      fontSize: 32.0,
                       color: Colors.white,
+                      fontWeight: FontWeight.bold,
                     ),
+                  ),
+                  const SizedBox(height: 20),
+                  Container(
+                    padding: const EdgeInsets.fromLTRB(10, 0, 10, 0),
+                    decoration: BoxDecoration(
+                        color: Colors.blueAccent,
+                        borderRadius: BorderRadius.circular(10)),
+                    child: const Text(
+                      "Press SPACE to resume",
+                      style: TextStyle(
+                        color: Colors.white,
+                      ),
+                    )
+                  ),
+                  const SizedBox(height: 10,),
+                  TextButton(
+                    onPressed: () {
+                      context.read<MiniGameBloc>().add(ChangeDifficultyLevelEvent());
+                    }, 
+                    child: Text("Change Difficulty : ${state.difficultyLevel}")
+                  ),
+                  const SizedBox(height: 10,),
+                  IconButton(
+                    onPressed: () {
+                      context.read<MiniGameBloc>().add(ResetAllGameEvent());
+                    }, 
+                    icon: const Icon(
+                      Icons.exit_to_app_outlined,
+                      color: Colors.red,
+                      size: 35,
+                    )
                   )
-                ),
-                const SizedBox(height: 10,),
-                TextButton(
-                  onPressed: () {
-                    context.read<MiniGameBloc>().add(ChangeDifficultyLevelEvent());
-                  }, 
-                  child: Text("Change Difficulty : ${state.difficultyLevel}")
-                ),
-                const SizedBox(height: 10,),
-                IconButton(
-                  onPressed: () {
-                    context.read<MiniGameBloc>().add(ResetAllGameEvent());
-                  }, 
-                  icon: const Icon(
-                    Icons.exit_to_app_outlined,
-                    color: Colors.red,
-                    size: 35,
-                  )
-                )
-              ],
+                ],
+              ),
             ),
           ),
         );

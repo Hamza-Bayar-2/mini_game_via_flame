@@ -39,8 +39,8 @@ class ArcherPlayer extends SpriteAnimationGroupComponent with HasGameRef<MiniGam
   bool isArcherGetHit = false;
   late Bgm runSoundBmg = FlameAudio.bgmFactory(audioCache: FlameAudio.audioCache);
   final cameraShake = MoveEffect.by(
-    Vector2.all(20), 
-    InfiniteEffectController(ZigzagEffectController(period: 0.2))
+    Vector2(0, 15), 
+    InfiniteEffectController(ZigzagEffectController(period: 0.15))
   );
   late int previousArcherHealth = gameRef.miniGameBloc.state.archerHelth;
   late final Decorator decoratorForArcher;
