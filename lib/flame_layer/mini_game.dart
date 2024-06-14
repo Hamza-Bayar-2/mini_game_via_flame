@@ -30,13 +30,15 @@ class MiniGame extends FlameGame with HasKeyboardHandlerComponents, TapCallbacks
   // 0.72 seconds is the frame amount of the attack animation multiplies by step time (6 * 0.12)
   // The purpose of this timer is to ensure that arrows are released at the right time 
   // in the archer's attack animation. 
-  final Timer countdownAndRepeat = Timer(0.72);
+  final Timer arrowTimer = Timer(0.51);
   late Bgm backgroundMusic = FlameAudio.bgmFactory(audioCache: FlameAudio.audioCache); 
   final double heartSpawnPeriod = 7.5;
   late SpawnComponent heartSpawner;
   late SpawnComponent enemySpawner1;
   late SpawnComponent enemySpawner2;
   late int previousDifficultyLevel = miniGameBloc.state.difficultyLevel;
+  late int previousMonsterKillNumber = miniGameBloc.state.monsterKillNumber;
+  late int previousArcherHealth = miniGameBloc.state.archerHealth;
   late final CameraComponent cameraComponent;
   @override
   late final World world;
@@ -47,6 +49,7 @@ class MiniGame extends FlameGame with HasKeyboardHandlerComponents, TapCallbacks
   late final ArrowPool arrowPool;
   late final EnemyPool enemyPool;
   late Arrow arrow;
+  int streakKill = 0;
 
   @override
   Future<void> onLoad() async{
@@ -115,10 +118,10 @@ class MiniGame extends FlameGame with HasKeyboardHandlerComponents, TapCallbacks
 
   Future<void> _arrowManager(double dt) async {
     if((miniGameBloc.state.isSpaceKeyPressing) && !miniGameBloc.state.isArcherDead) {
-      countdownAndRepeat.update(dt);
-      countdownAndRepeat.resume();
+      arrowTimer.update(dt);
+      arrowTimer.resume();
       // when the time is up the arrow will be throwen
-      if(countdownAndRepeat.finished) {
+      if(arrowTimer.finished) {
         arrow = arrowPool.acquire();
         // the retun arrow could be a new arrow
         // so first we check if the world has this arrow, if not we add it to the world
@@ -128,12 +131,12 @@ class MiniGame extends FlameGame with HasKeyboardHandlerComponents, TapCallbacks
         // after the arrow is ready it will be fired
         arrow.fire();
         FlameAudio.play("arrow.mp3");
-        countdownAndRepeat.start();
+        arrowTimer.start();
         // from here we can check how many arrow dose the pool has
         print(arrowPool.poolLength);
       }
     } else {
-      countdownAndRepeat.stop();
+      arrowTimer.stop();
     } 
   }
 

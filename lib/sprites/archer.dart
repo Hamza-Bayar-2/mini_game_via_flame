@@ -42,7 +42,7 @@ class ArcherPlayer extends SpriteAnimationGroupComponent with HasGameRef<MiniGam
     Vector2(0, 15), 
     InfiniteEffectController(ZigzagEffectController(period: 0.15))
   );
-  late int previousArcherHealth = gameRef.miniGameBloc.state.archerHelth;
+  late int previousArcherHealth = gameRef.miniGameBloc.state.archerHealth;
   late final Decorator decoratorForArcher;
   late final RectangleHitbox hitbox;
 
@@ -158,7 +158,7 @@ class ArcherPlayer extends SpriteAnimationGroupComponent with HasGameRef<MiniGam
   // this helps us to manage all the animation that belongs to the archer
   void _loadAnimation() {
     double time = 0.07;
-    final attackAnimation = _spriteAnimation(archerState: "Attack", frameAmount: 6, stepTime: 0.12);
+    final attackAnimation = _spriteAnimation(archerState: "Attack", frameAmount: 6, stepTime: 0.085);
     final deathAnimation = _spriteAnimation(archerState: "Death", frameAmount: 10, stepTime: time);
     final fallAnimation = _spriteAnimation(archerState: "Fall", frameAmount: 2, stepTime: time);
     final getHitAnimation = _spriteAnimation(archerState: "Get Hit", frameAmount: 3, stepTime: time);
@@ -317,7 +317,7 @@ class ArcherPlayer extends SpriteAnimationGroupComponent with HasGameRef<MiniGam
   void _updateArcherDecorator(double dt) {
     archerHelathIncreaseCountdown.update(dt);
 
-    bool isLowHealth = gameRef.miniGameBloc.state.archerHelth <= 20;
+    bool isLowHealth = gameRef.miniGameBloc.state.archerHealth <= 20;
     
     if (isArcherHealthIncreased) {
       // Apply green tint when health is increased
@@ -332,15 +332,15 @@ class ArcherPlayer extends SpriteAnimationGroupComponent with HasGameRef<MiniGam
         decoratorForArcher.replaceLast(null);
       }
       archerHelathIncreaseCountdown.stop();
-    } else if (isLowHealth && previousArcherHealth != gameRef.miniGameBloc.state.archerHelth && !gameRef.miniGameBloc.state.isArcherDead) {
+    } else if (isLowHealth && previousArcherHealth != gameRef.miniGameBloc.state.archerHealth && !gameRef.miniGameBloc.state.isArcherDead) {
       // Apply red tint when health is low
       decoratorForArcher.replaceLast(PaintDecorator.tint(const Color.fromARGB(93, 255, 0, 0)));
-    } else if (!isLowHealth && previousArcherHealth != gameRef.miniGameBloc.state.archerHelth) {
+    } else if (!isLowHealth && previousArcherHealth != gameRef.miniGameBloc.state.archerHealth) {
       // Remove the tint if the health is no longer low and health is not increased
       decoratorForArcher.replaceLast(null);
     }
 
-    previousArcherHealth = gameRef.miniGameBloc.state.archerHelth;
+    previousArcherHealth = gameRef.miniGameBloc.state.archerHealth;
   }
 
 }

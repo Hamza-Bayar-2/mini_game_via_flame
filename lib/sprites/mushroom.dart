@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math';
 import 'package:flame/collisions.dart';
 import 'package:flame/components.dart';
 import 'package:flame_audio/flame_audio.dart';
@@ -24,6 +25,8 @@ class Mushroom extends SpriteAnimationGroupComponent with HasGameRef<MiniGame>, 
   final Timer mushroomDeathTimer = Timer(0.39);
   final Timer bloodTimer = Timer(0.1);
   late final rectangleHitbox = RectangleHitbox.relative(parentSize: enemySize, Vector2(0.15, 0.25), position: enemySize * 0.42)..debugMode = false;
+  final bool isMushroomFollowsTheArhcer = Random().nextInt(100) < 30;
+  late double mushroomHypotenuseSpeed = sqrt(mushroomSpeed*mushroomSpeed/2);
 
   @override
   FutureOr<void> onLoad() {
@@ -41,7 +44,7 @@ class Mushroom extends SpriteAnimationGroupComponent with HasGameRef<MiniGame>, 
     }
 
     if(isVisible) {
-      if(isDying || gameRef.miniGameBloc.state.gameStage != 2) {
+      if(isDying || (gameRef.miniGameBloc.state.gameStage != 2 && gameRef.miniGameBloc.state.gameMode == 0)) {
         _bloodParticles(dt);
         _mushroomDeath(dt);
       } else {
@@ -93,26 +96,47 @@ class Mushroom extends SpriteAnimationGroupComponent with HasGameRef<MiniGame>, 
   void _mushroomMovement(double dt) {
     Vector2 velocity = Vector2.zero();  
     double directionX = 0.0;
+    double directionY = 0.0;
 
     if(isSpawnRight) {
-      directionX -= mushroomSpeed;  
       if(isMushroomFacingRight){
         flipHorizontallyAroundCenter();
         isMushroomFacingRight = false;
       }
       current = MushroomState.run;
 
+      if(isMushroomFollowsTheArhcer && gameRef.archerPlayer.position.x < position.x) {
+        directionX -= mushroomHypotenuseSpeed;
+        if(gameRef.archerPlayer.position.y < position.y){
+          directionY -= mushroomHypotenuseSpeed;
+        } else {
+          directionY += mushroomHypotenuseSpeed;
+        }
+      } else {
+        directionX -= mushroomSpeed;
+      }
+
       if(position.x < 0) {
         deactivate();
         position = Vector2(gameRef.background.size.x, 0);
       }
     } else {
-      directionX += mushroomSpeed;
       if(!isMushroomFacingRight){
         flipHorizontallyAroundCenter();
         isMushroomFacingRight = true;
       }
       current = MushroomState.run;
+
+      if(isMushroomFollowsTheArhcer && gameRef.archerPlayer.position.x > position.x) {
+        directionX += mushroomHypotenuseSpeed;
+        if(gameRef.archerPlayer.position.y < position.y){
+          directionY -= mushroomHypotenuseSpeed;
+        } else {
+          directionY += mushroomHypotenuseSpeed;
+        }
+      } else {
+        directionX += mushroomSpeed;
+      }
 
       if(position.x > gameRef.background.size.x) {
         deactivate();
@@ -120,7 +144,7 @@ class Mushroom extends SpriteAnimationGroupComponent with HasGameRef<MiniGame>, 
       }
     }
 
-    velocity = Vector2(directionX, 0);
+    velocity = Vector2(directionX, directionY);
     position.add(velocity * dt);
   }
 

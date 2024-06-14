@@ -6,17 +6,17 @@ part 'mini_game_state.dart';
 class MiniGameBloc extends Bloc<MiniGameEvent, MiniGameState> {
   MiniGameBloc() : super(MiniGameState.initial()) {
     on<DecreaseHealthEvent>((event, emit) {
-      final newHelth = state.archerHelth - 20;
-      emit(state.copyWith(archerHelth: newHelth <= 0 ? 0 : newHelth));
-      emit(state.copyWith(isArcherDead: state.archerHelth <= 0 ));
+      final newHelth = state.archerHealth - 20;
+      emit(state.copyWith(archerHealth: newHelth <= 0 ? 0 : newHelth));
+      emit(state.copyWith(isArcherDead: state.archerHealth <= 0 ));
     });
     on<IncreaseHealthEvent>((event, emit) {
-      final newHelth = state.archerHelth + 10;
-      emit(state.copyWith(archerHelth: newHelth >= 100 ? 100 : newHelth));
+      final newHelth = state.archerHealth + 10;
+      emit(state.copyWith(archerHealth: newHelth >= 100 ? 100 : newHelth));
     });
     on<ResetHealthEvent>((event, emit) {
-      emit(state.copyWith(archerHelth: MiniGameState.initial().archerHelth));
-      emit(state.copyWith(isArcherDead: state.archerHelth <= 0));
+      emit(state.copyWith(archerHealth: MiniGameState.initial().archerHealth));
+      emit(state.copyWith(isArcherDead: state.archerHealth <= 0));
       emit(state.copyWith(monsterKillNumber: 0));
     });
     on<FaceRightEvent>((event, emit) {
@@ -36,7 +36,7 @@ class MiniGameBloc extends Bloc<MiniGameEvent, MiniGameState> {
     });
     on<ChangeDifficultyLevelEvent>((event, emit) {
       final newDifficulty = state.difficultyLevel + 1;
-      final newGoblinSpawnPeriod = state.enemySpawnPeriod - 0.7;
+      final newGoblinSpawnPeriod = state.enemySpawnPeriod - 0.6;
       emit(state.copyWith(difficultyLevel: newDifficulty > 3 ? 1 : newDifficulty));
       emit(state.copyWith(enemySpawnPeriod: newDifficulty > 3 ? MiniGameState.initial().enemySpawnPeriod : newGoblinSpawnPeriod));
     });
@@ -69,8 +69,8 @@ class MiniGameBloc extends Bloc<MiniGameEvent, MiniGameState> {
       emit(state.copyWith(gameMode: newGameMode > 1 ? 0 : newGameMode));
     });
     on<ResetAllGameEvent>((event, emit) {
-      emit(state.copyWith(archerHelth: MiniGameState.initial().archerHelth));
-      emit(state.copyWith(isArcherDead: state.archerHelth <= 0));
+      emit(state.copyWith(archerHealth: MiniGameState.initial().archerHealth));
+      emit(state.copyWith(isArcherDead: state.archerHealth <= 0));
       emit(state.copyWith(monsterKillNumber: 0));
       emit(state.copyWith(flutterPage: 0));
       emit(state.copyWith(gameStage: 1));

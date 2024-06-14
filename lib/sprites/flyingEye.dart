@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math';
 import 'package:flame/collisions.dart';
 import 'package:flame/components.dart';
 import 'package:flame_audio/flame_audio.dart';
@@ -19,6 +20,7 @@ class FlyingEye extends SpriteAnimationGroupComponent with HasGameRef<MiniGame>,
   }) : super(position: position, size: enemySize, anchor: anchor);
 
   double flyingEyeSpeed = 150;
+  double flyingEyeSpeedUpScale = 120;
   bool isFlyingEyeFacingRight = true;
   bool isDying = false;
   // the timer is a bit less than the death time, 
@@ -26,6 +28,7 @@ class FlyingEye extends SpriteAnimationGroupComponent with HasGameRef<MiniGame>,
   final Timer flyingEyeDeathTimer = Timer(0.39);
   final Timer bloodTimer = Timer(0.1);
   late final rectangleHitbox = RectangleHitbox.relative(parentSize: enemySize, Vector2(0.22, 0.15))..debugMode = false;
+  final bool isFlyingEyeGoingFast = Random().nextInt(100) < 35;
 
   @override
   Future<void> onLoad() async {
@@ -44,7 +47,7 @@ class FlyingEye extends SpriteAnimationGroupComponent with HasGameRef<MiniGame>,
     }
 
     if(isVisible) {
-      if(isDying || gameRef.miniGameBloc.state.gameStage != 3) {
+      if(isDying || (gameRef.miniGameBloc.state.gameStage != 3 && gameRef.miniGameBloc.state.gameMode == 0)) {
         _bloodParticles(dt);
         _flyingEyeDeath(dt);
       } else {
@@ -99,12 +102,12 @@ class FlyingEye extends SpriteAnimationGroupComponent with HasGameRef<MiniGame>,
     double directionX = 0.0;
 
     if(isSpawnRight) {
-      directionX -= flyingEyeSpeed;  
       if(isFlyingEyeFacingRight){
         flipHorizontallyAroundCenter();
         isFlyingEyeFacingRight = false;
       }
       current = FlyingEyeState.run;
+      directionX -= isFlyingEyeGoingFast ? flyingEyeSpeed + flyingEyeSpeedUpScale : flyingEyeSpeed;  
 
       if(position.x < 0) {
         // removeFromParent(); 
@@ -112,12 +115,12 @@ class FlyingEye extends SpriteAnimationGroupComponent with HasGameRef<MiniGame>,
         position = Vector2(gameRef.background.size.x, 0);
       }
     } else {
-      directionX += flyingEyeSpeed;
       if(!isFlyingEyeFacingRight){
         flipHorizontallyAroundCenter();
         isFlyingEyeFacingRight = true;
       }
       current = FlyingEyeState.run;
+      directionX += isFlyingEyeGoingFast ? flyingEyeSpeed + flyingEyeSpeedUpScale : flyingEyeSpeed;
 
       if(position.x > gameRef.background.size.x) {
         // removeFromParent(); 

@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math';
 import 'package:flame/collisions.dart';
 import 'package:flame/components.dart';
 import 'package:flame_audio/flame_audio.dart';
@@ -25,6 +26,8 @@ class Goblin extends SpriteAnimationGroupComponent with HasGameRef<MiniGame>, Co
   final Timer bloodTimer = Timer(0.1);
   // I used position because the hitbox does not placed well.
   late final RectangleHitbox rectangleHitbox = RectangleHitbox.relative(parentSize: enemySize, Vector2(0.15, 0.22), position: enemySize * 0.45)..debugMode = false;
+  final bool isGoblinFollowsTheArhcer = Random().nextInt(100) < 30;
+  late double goblinHypotenuseSpeed = sqrt(goblinSpeed*goblinSpeed/2);
 
   @override
   Future<void> onLoad() async{
@@ -42,14 +45,15 @@ class Goblin extends SpriteAnimationGroupComponent with HasGameRef<MiniGame>, Co
     }
     
     if(isVisible) {
-      if(isDying || gameRef.miniGameBloc.state.gameStage != 1) {
+      // in kill mode when the eneny changes they will not die
+      if(isDying || (gameRef.miniGameBloc.state.gameStage != 1 && gameRef.miniGameBloc.state.gameMode == 0)) {
         _bloodParticles(dt);
         _goblinDeath(dt);
       } else {
         _goblinMovement(dt);
       }
     } else {
-      // whitout this line the blood particles will not work again
+      // whitout this line the blood particles will only work for ones
       bloodTimer.reset();
     }
 
@@ -95,14 +99,25 @@ void onCollision(Set<Vector2> intersectionPoints, PositionComponent other) {
   void _goblinMovement(double dt) {
     Vector2 velocity = Vector2.zero();  
     double directionX = 0.0;
+    double directionY = 0.0;
 
     if(isSpawnRight) {
-      directionX -= goblinSpeed;  
       if(isGoblinFacingRight){
         flipHorizontallyAroundCenter();
         isGoblinFacingRight = false;
       }
       current = GoblinState.run;
+
+      if(isGoblinFollowsTheArhcer && gameRef.archerPlayer.position.x < position.x) {
+        directionX -= goblinHypotenuseSpeed;
+        if(gameRef.archerPlayer.position.y - 20 < position.y){
+          directionY -= goblinHypotenuseSpeed;
+        } else {
+          directionY += goblinHypotenuseSpeed;
+        }
+      } else {
+        directionX -= goblinSpeed;
+      }
 
       if(position.x < 0) {
         deactivate();
@@ -114,12 +129,22 @@ void onCollision(Set<Vector2> intersectionPoints, PositionComponent other) {
         position = Vector2(gameRef.background.size.x, 0);
       }
     } else {
-      directionX += goblinSpeed;
       if(!isGoblinFacingRight){
         flipHorizontallyAroundCenter();
         isGoblinFacingRight = true;
       }
       current = GoblinState.run;
+
+      if(isGoblinFollowsTheArhcer && gameRef.archerPlayer.position.x > position.x) {
+        directionX += goblinHypotenuseSpeed;
+        if(gameRef.archerPlayer.position.y -20 < position.y){
+          directionY -= goblinHypotenuseSpeed;
+        } else {
+          directionY += goblinHypotenuseSpeed;
+        }
+      } else {
+        directionX += goblinSpeed;
+      }
 
       if(position.x > gameRef.background.size.x) {
         deactivate();
@@ -127,7 +152,7 @@ void onCollision(Set<Vector2> intersectionPoints, PositionComponent other) {
       }
     }
 
-    velocity = Vector2(directionX, 0);
+    velocity = Vector2(directionX, directionY);
     position.add(velocity * dt);
   }
 
