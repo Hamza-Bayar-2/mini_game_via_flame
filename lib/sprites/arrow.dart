@@ -12,7 +12,6 @@ import 'package:mini_game_via_flame/sprites/mushroom.dart';
 import 'package:mini_game_via_flame/sprites/skeleton.dart';
 
 
-
 class Arrow extends SpriteAnimationComponent with HasGameRef<MiniGame>, CollisionCallbacks, HasVisibility{
   Arrow({
     SpriteAnimation? animation,
@@ -59,10 +58,15 @@ class Arrow extends SpriteAnimationComponent with HasGameRef<MiniGame>, Collisio
 
   @override
   void onCollision(Set<Vector2> intersectionPoints, PositionComponent other) {
-    if(other is Goblin || other is Mushroom || other is Skeleton || other is FlyingEye) {
+    if(other is Goblin || other is Mushroom || other is FlyingEye) {
       hit();
       gameRef.miniGameBloc.add(KillMonster());
-    } 
+    } else if(other is Skeleton) {
+      hit();
+      if(!other.isShielding) {
+        gameRef.miniGameBloc.add(KillMonster());
+      }
+    }
     super.onCollision(intersectionPoints, other);
   }
 
@@ -114,14 +118,14 @@ class Arrow extends SpriteAnimationComponent with HasGameRef<MiniGame>, Collisio
   void fire() {
     isVisible = true;
     hitbox.collisionType = CollisionType.active;
-    print('Arrow fired!');
+    // print('Arrow fired!');
   }
 
   void hit() {
     isVisible = false;
     hitbox.collisionType = CollisionType.inactive;
     position = gameRef.archerPlayer.position + Vector2(0, -gameRef.background.size.y * 0.03);
-    print('Arrow hit the target!');
+    // print('Arrow hit the target!');
   }
 
 }

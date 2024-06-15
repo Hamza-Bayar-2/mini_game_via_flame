@@ -26,7 +26,7 @@ class Goblin extends SpriteAnimationGroupComponent with HasGameRef<MiniGame>, Co
   final Timer bloodTimer = Timer(0.1);
   // I used position because the hitbox does not placed well.
   late final RectangleHitbox rectangleHitbox = RectangleHitbox.relative(parentSize: enemySize, Vector2(0.15, 0.22), position: enemySize * 0.45)..debugMode = false;
-  final bool isGoblinFollowsTheArhcer = Random().nextInt(100) < 30;
+  final bool isGoblinFollowsTheArhcer = Random().nextInt(100) < 35;
   late double goblinHypotenuseSpeed = sqrt(goblinSpeed*goblinSpeed/2);
 
   @override
@@ -46,7 +46,7 @@ class Goblin extends SpriteAnimationGroupComponent with HasGameRef<MiniGame>, Co
     
     if(isVisible) {
       // in kill mode when the eneny changes they will not die
-      if(isDying || (gameRef.miniGameBloc.state.gameStage != 1 && gameRef.miniGameBloc.state.gameMode == 0)) {
+      if(isDying) {
         _bloodParticles(dt);
         _goblinDeath(dt);
       } else {

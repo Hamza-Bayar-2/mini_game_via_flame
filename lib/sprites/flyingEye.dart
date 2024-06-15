@@ -20,7 +20,7 @@ class FlyingEye extends SpriteAnimationGroupComponent with HasGameRef<MiniGame>,
   }) : super(position: position, size: enemySize, anchor: anchor);
 
   double flyingEyeSpeed = 150;
-  double flyingEyeSpeedUpScale = 120;
+  double flyingEyeSpeedUpScale = 150;
   bool isFlyingEyeFacingRight = true;
   bool isDying = false;
   // the timer is a bit less than the death time, 
@@ -47,7 +47,7 @@ class FlyingEye extends SpriteAnimationGroupComponent with HasGameRef<MiniGame>,
     }
 
     if(isVisible) {
-      if(isDying || (gameRef.miniGameBloc.state.gameStage != 3 && gameRef.miniGameBloc.state.gameMode == 0)) {
+      if(isDying) {
         _bloodParticles(dt);
         _flyingEyeDeath(dt);
       } else {

@@ -6,7 +6,7 @@ import 'package:mini_game_via_flame/flame_layer/mini_game.dart';
 import 'package:mini_game_via_flame/sprites/archer.dart';
 import 'package:mini_game_via_flame/sprites/arrow.dart';
 
-enum SkeletonState {run, death, attack}
+enum SkeletonState {run, death, attack, shield}
 
 class Skeleton extends SpriteAnimationGroupComponent with HasGameRef<MiniGame>, CollisionCallbacks, HasVisibility{
   bool isSpawnRight;
@@ -21,9 +21,11 @@ class Skeleton extends SpriteAnimationGroupComponent with HasGameRef<MiniGame>, 
   double skeletonSpeed = 120;
   bool isSkeletonFacingRight = true;
   bool isDying = false;
+  bool isShielding = false;
   final Timer skeletonDeathTimer = Timer(0.39);
   final Timer bloodTimer = Timer(0.1);
   late final rectangleHitbox = RectangleHitbox.relative(parentSize: enemySize, Vector2(0.15, 0.33))..debugMode = false;
+  List<Arrow> shieldingArrows = [];
 
   @override
   FutureOr<void> onLoad() {
@@ -41,11 +43,16 @@ class Skeleton extends SpriteAnimationGroupComponent with HasGameRef<MiniGame>, 
     }
 
     if(isVisible) {
-      if(isDying || (gameRef.miniGameBloc.state.gameStage != 4 && gameRef.miniGameBloc.state.gameMode == 0)) {
+      if(isDying) {
         _bloodParticles(dt);
         _skeletonDeath(dt);
       } else {
-        _skeletonMovement(dt);
+        if(isShielding) {
+          _skeletonShield();
+        } else {
+          _skeletonMovement(dt);
+          _isSkeletonShielding();
+        }
       }
     } else {
       bloodTimer.reset();
@@ -57,8 +64,12 @@ class Skeleton extends SpriteAnimationGroupComponent with HasGameRef<MiniGame>, 
   @override
   void onCollision(Set<Vector2> intersectionPoints, PositionComponent other) {
     if(other is Arrow && !isDying){
-      isDying = true;
-      FlameAudio.play("skeletonDeath.mp3");
+      if(isShielding) {
+        FlameAudio.play("shield.mp3");
+      } else {
+        isDying = true;
+        FlameAudio.play("skeletonDeath.mp3");
+      }
     } 
     else if (other is ArcherPlayer) {
       deactivate();
@@ -71,11 +82,13 @@ class Skeleton extends SpriteAnimationGroupComponent with HasGameRef<MiniGame>, 
     final runAnimation = _spriteAnimation(skeletonState: "Walk", frameAmount: 4, stepTime: time * 1.5);
     final deathAnimation = _spriteAnimation(skeletonState: "Death", frameAmount: 4, stepTime: time);
     final attackAnimation = _spriteAnimation(skeletonState: "Attack", frameAmount: 8, stepTime: time);
+    final shieldAnimation = _spriteAnimation(skeletonState: "Shield", frameAmount: 4, stepTime: 0.2);
 
     animations = {
       SkeletonState.run: runAnimation,
       SkeletonState.death: deathAnimation,
       SkeletonState.attack: attackAnimation,
+      SkeletonState.shield: shieldAnimation,
     };
   }
 
@@ -143,6 +156,26 @@ class Skeleton extends SpriteAnimationGroupComponent with HasGameRef<MiniGame>, 
       deactivate();
       isDying = false;
       skeletonDeathTimer.stop();
+    }
+  }
+
+  void _isSkeletonShielding() {
+    for(Arrow activeArrow in gameRef.arrowPool.getArrowPool) {
+      if(activeArrow.isVisible && activeArrow.isArrowFacingRight && !isSkeletonFacingRight && position.x - activeArrow.position.x > 340) {
+        shieldingArrows.add(activeArrow);
+      } else if(activeArrow.isVisible && !activeArrow.isArrowFacingRight && isSkeletonFacingRight && activeArrow.position.x - position.x > 340) {
+        shieldingArrows.add(activeArrow);
+      }
+
+      isShielding = shieldingArrows.isNotEmpty;
+    }
+  }
+
+  void _skeletonShield() {
+    current = SkeletonState.shield;
+    shieldingArrows.removeWhere((arrow) => !arrow.isVisible);
+    if(shieldingArrows.isEmpty) {
+      isShielding = false;
     }
   }
 

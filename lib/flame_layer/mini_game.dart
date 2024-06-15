@@ -53,7 +53,7 @@ class MiniGame extends FlameGame with HasKeyboardHandlerComponents, TapCallbacks
 
   @override
   Future<void> onLoad() async{
-    await FlameAudio.audioCache.loadAll(['running.mp3', 'arrow.mp3', 'death.mp3', 'hurt.mp3', 'monsterDeath.mp3', 'bgm.mp3', 'powerUp.mp3', 'win.mp3', 'lose.mp3', 'skeletonDeath.mp3', 'skeletonDeath2.mp3', 'mushroomDeath.mp3', 'flyingEyeDeath.mp3']);
+    await FlameAudio.audioCache.loadAll(['running.mp3', 'arrow.mp3', 'death.mp3', 'hurt.mp3', 'monsterDeath.mp3', 'bgm.mp3', 'powerUp.mp3', 'win.mp3', 'lose.mp3', 'skeletonDeath.mp3', 'skeletonDeath2.mp3', 'mushroomDeath.mp3', 'flyingEyeDeath.mp3', 'shield.mp3']);
     await images.loadAllImages();
     background = SpriteComponent(sprite: Sprite(images.fromCache("background.png")), size: size);
     archerPlayer = ArcherPlayer(size: Vector2.all(background.size.y * archerScale), position: Vector2(background.size.x / 2, background.size.y / 2));
@@ -133,7 +133,7 @@ class MiniGame extends FlameGame with HasKeyboardHandlerComponents, TapCallbacks
         FlameAudio.play("arrow.mp3");
         arrowTimer.start();
         // from here we can check how many arrow dose the pool has
-        print(arrowPool.poolLength);
+        print("arrow pool: ${arrowPool.getArrowPool.length}");
       }
     } else {
       arrowTimer.stop();
@@ -152,22 +152,22 @@ class MiniGame extends FlameGame with HasKeyboardHandlerComponents, TapCallbacks
 
   dynamic _enemyPickerForEnemyCreaterMethod(bool isSpawnRight, Vector2 enemySize) {
     if(miniGameBloc.state.gameStage == 1) {
-      print("goblin pool: ${enemyPool.goblinPoolLength}");
+      print("goblin pool: ${enemyPool.getGoblinPool.length}");
       final goblin = enemyPool.goblinAcquire(isSpawnRight, enemySize);
       goblin.activate();
       return goblin;
     } else if(miniGameBloc.state.gameStage == 2) {
-      print("mushroom pool: ${enemyPool.mushroomPoolLength}");
+      print("mushroom pool: ${enemyPool.getMushroomPool.length}");
       final mushroom = enemyPool.mushroomAcquire(isSpawnRight, enemySize);
       mushroom.activate();
       return mushroom;
     } else if(miniGameBloc.state.gameStage == 3) {
-      print("flying Eye pool: ${enemyPool.flyingEyePoolLength}");
+      print("flying Eye pool: ${enemyPool.getFlyingEyePool.length}");
       final flyingEye = enemyPool.flyingEyeAcquire(isSpawnRight, enemySize);
       flyingEye.activate();
       return flyingEye;
     } else if(miniGameBloc.state.gameStage == 4) {
-      print("skeleton pool: ${enemyPool.skeletonPoolLength}");
+      print("skeleton pool: ${enemyPool.getSkeletonPool.length}");
       final skeleton = enemyPool.skeletonAcquire(isSpawnRight, enemySize);
       skeleton.activate();
       return skeleton;

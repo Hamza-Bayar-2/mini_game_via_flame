@@ -67,8 +67,8 @@ class EnemyPool extends Component with HasGameRef<MiniGame> {
     return newSkeleton;
   }
   
-  get goblinPoolLength => _goblinPool.length;
-  get mushroomPoolLength => _mushroomPool.length;
-  get flyingEyePoolLength => _flyinEyePool.length;
-  get skeletonPoolLength => _skeletonPool.length;
+  get getGoblinPool => _goblinPool;
+  get getMushroomPool => _mushroomPool;
+  get getFlyingEyePool => _flyinEyePool;
+  get getSkeletonPool => _skeletonPool;
 }

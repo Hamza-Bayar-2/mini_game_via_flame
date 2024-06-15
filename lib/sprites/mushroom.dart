@@ -25,7 +25,7 @@ class Mushroom extends SpriteAnimationGroupComponent with HasGameRef<MiniGame>, 
   final Timer mushroomDeathTimer = Timer(0.39);
   final Timer bloodTimer = Timer(0.1);
   late final rectangleHitbox = RectangleHitbox.relative(parentSize: enemySize, Vector2(0.15, 0.25), position: enemySize * 0.42)..debugMode = false;
-  final bool isMushroomFollowsTheArhcer = Random().nextInt(100) < 30;
+  final bool isMushroomFollowsTheArhcer = Random().nextInt(100) < 35;
   late double mushroomHypotenuseSpeed = sqrt(mushroomSpeed*mushroomSpeed/2);
 
   @override
@@ -44,7 +44,7 @@ class Mushroom extends SpriteAnimationGroupComponent with HasGameRef<MiniGame>, 
     }
 
     if(isVisible) {
-      if(isDying || (gameRef.miniGameBloc.state.gameStage != 2 && gameRef.miniGameBloc.state.gameMode == 0)) {
+      if(isDying) {
         _bloodParticles(dt);
         _mushroomDeath(dt);
       } else {

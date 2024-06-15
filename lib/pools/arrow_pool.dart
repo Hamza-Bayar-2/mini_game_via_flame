@@ -19,7 +19,7 @@ class ArrowPool extends Component with HasGameRef<MiniGame> {
     return newArrow;
   }
 
-  get poolLength => _pool.length;
+  get getArrowPool => _pool;
   
   Arrow _arrowCreater() {
     return Arrow(
