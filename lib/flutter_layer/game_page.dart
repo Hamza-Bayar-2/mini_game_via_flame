@@ -13,6 +13,7 @@ class GamePage extends StatelessWidget {
           padding: const EdgeInsets.all(10),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -30,22 +31,31 @@ class GamePage extends StatelessWidget {
                   ),
                 ],
               ),
-              state.gameMode == 0 ? Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text("Health: ${state.archerHealth}"),
-                  const SizedBox(height: 20,),
-                  Text("Kill amount: ${state.monsterKillNumber} / 40"),
-                  const SizedBox(height: 20,),
-                  Text("Stage: ${state.gameStage} / 4"),
-                ],
+              state.gameMode == 0 ? 
+              Container(
+                padding: const EdgeInsets.all(30),
+                decoration: BoxDecoration(
+                  color: Colors.black.withOpacity(0.7),
+                  borderRadius: BorderRadius.circular(10)
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text("health: ${state.archerHealth}"),
+                    const SizedBox(height: 20,),
+                    Text("kill: ${state.monsterKillNumber} / 40"),
+                    const SizedBox(height: 20,),
+                    Text("stage: ${state.gameStage} / 4"),
+                  ],
+                ),
               ) :
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text("Health: ${state.archerHealth}"),
+                  Text("health: ${state.archerHealth}"),
                   const SizedBox(height: 20,),
-                  Text("Kill amount: ${state.monsterKillNumber}"),
+                  Text("kill: ${state.monsterKillNumber}"),
                 ],
               )
             ],

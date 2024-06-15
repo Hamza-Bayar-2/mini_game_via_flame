@@ -43,7 +43,7 @@ class Skeleton extends SpriteAnimationGroupComponent with HasGameRef<MiniGame>, 
     }
 
     if(isVisible) {
-      if(isDying) {
+      if(isDying || (gameRef.miniGameBloc.state.gameMode == 0 && gameRef.miniGameBloc.state.gameStage != 4)) {
         _bloodParticles(dt);
         _skeletonDeath(dt);
       } else {

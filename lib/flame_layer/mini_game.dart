@@ -55,7 +55,7 @@ class MiniGame extends FlameGame with HasKeyboardHandlerComponents, TapCallbacks
   Future<void> onLoad() async{
     await FlameAudio.audioCache.loadAll(['running.mp3', 'arrow.mp3', 'death.mp3', 'hurt.mp3', 'monsterDeath.mp3', 'bgm.mp3', 'powerUp.mp3', 'win.mp3', 'lose.mp3', 'skeletonDeath.mp3', 'skeletonDeath2.mp3', 'mushroomDeath.mp3', 'flyingEyeDeath.mp3', 'shield.mp3']);
     await images.loadAllImages();
-    background = SpriteComponent(sprite: Sprite(images.fromCache("background.png")), size: size);
+    background = SpriteComponent(sprite: Sprite(images.fromCache("gameBackground.png")), size: size);
     archerPlayer = ArcherPlayer(size: Vector2.all(background.size.y * archerScale), position: Vector2(background.size.x / 2, background.size.y / 2));
     heartSpawner = _heartSpawner();
     enemySpawner1 = _enemySpawner(true, Vector2.all(background.size.y * monstersScale));
@@ -146,7 +146,7 @@ class MiniGame extends FlameGame with HasKeyboardHandlerComponents, TapCallbacks
           return _enemyPickerForEnemyCreaterMethod(isSpawnRight, enemySize)..debugMode = false;
         },
         period: miniGameBloc.state.enemySpawnPeriod,
-        area: Rectangle.fromLTWH(isSpawnRight ? background.size.x : 0, 25, 0, background.size.y - 50),
+        area: Rectangle.fromLTWH(isSpawnRight ? background.size.x : 0, background.size.y * 0.3, 0, background.size.y * 0.6),
     );
   }
 

@@ -23,7 +23,9 @@ class WinLosePage extends StatelessWidget {
         child: Container(
           padding: const EdgeInsets.all(30),
           decoration: BoxDecoration(
-            color: Colors.redAccent, borderRadius: BorderRadius.circular(10)),
+            color: Colors.black.withOpacity(0.7),
+            borderRadius: BorderRadius.circular(10)
+          ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -31,24 +33,18 @@ class WinLosePage extends StatelessWidget {
                 'Game Over',
                 style: TextStyle(
                   fontSize: 32.0,
-                  color: Colors.white,
+                  color: Colors.red,
                   fontWeight: FontWeight.bold,
                 ),
               ),
               const SizedBox(height: 20),
-              Container(
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(
-                    color: Colors.blueAccent,
-                    borderRadius: BorderRadius.circular(10)),
-                child: TextButton(
-                  onPressed: () {
-                    context.read<MiniGameBloc>().add(GoToMainPage());
-                    context.read<MiniGameBloc>().add(ResetHealthEvent());
-                  }, 
-                  child: const Text(
-                    "Go to menu"
-                  )
+              TextButton(
+                onPressed: () {
+                  context.read<MiniGameBloc>().add(GoToMainPage());
+                  context.read<MiniGameBloc>().add(ResetHealthEvent());
+                }, 
+                child: const Text(
+                  "Go to menu",
                 )
               )
             ],
@@ -62,7 +58,9 @@ class WinLosePage extends StatelessWidget {
         child: Container(
           padding: const EdgeInsets.all(30),
           decoration: BoxDecoration(
-              color: Colors.green, borderRadius: BorderRadius.circular(10)),
+              color: Colors.black.withOpacity(0.7), 
+              borderRadius: BorderRadius.circular(10)
+            ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -70,24 +68,18 @@ class WinLosePage extends StatelessWidget {
                 'You Win!',
                 style: TextStyle(
                   fontSize: 32.0,
-                  color: Colors.white,
+                  color: Colors.green,
                   fontWeight: FontWeight.bold,
                 ),
               ),
               const SizedBox(height: 20),
-                          Container(
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(
-                    color: Colors.blueAccent,
-                    borderRadius: BorderRadius.circular(10)),
-                child: TextButton(
-                  onPressed: () {
-                    context.read<MiniGameBloc>().add(GoToMainPage());
-                    context.read<MiniGameBloc>().add(ResetHealthEvent());
-                  }, 
-                  child: const Text(
-                    "Go to menu"
-                  )
+              TextButton(
+                onPressed: () {
+                  context.read<MiniGameBloc>().add(GoToMainPage());
+                  context.read<MiniGameBloc>().add(ResetHealthEvent());
+                }, 
+                child: const Text(
+                  "Go to menu",
                 )
               ),
             ],

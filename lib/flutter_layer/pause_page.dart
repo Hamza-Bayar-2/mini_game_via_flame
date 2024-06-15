@@ -15,9 +15,12 @@ class PausePage extends StatelessWidget {
           child: BackdropFilter(
             filter: ImageFilter.blur(sigmaX: 5.0, sigmaY: 5.0),
             child: Container(
+              width: 440,
               padding: const EdgeInsets.all(30),
               decoration: BoxDecoration(
-                  color: const Color.fromRGBO(158, 158, 158, 1), borderRadius: BorderRadius.circular(10)),
+                color: Colors.black.withOpacity(0.7),
+                borderRadius: BorderRadius.circular(10),
+              ),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
@@ -25,29 +28,54 @@ class PausePage extends StatelessWidget {
                     'Game Paused',
                     style: TextStyle(
                       fontSize: 32.0,
-                      color: Colors.white,
+                      color: Colors.orange,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
                   const SizedBox(height: 20),
-                  Container(
-                    padding: const EdgeInsets.fromLTRB(10, 0, 10, 0),
-                    decoration: BoxDecoration(
-                        color: Colors.blueAccent,
-                        borderRadius: BorderRadius.circular(10)),
-                    child: const Text(
-                      "Press SPACE to resume",
-                      style: TextStyle(
-                        color: Colors.white,
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text(
+                        'difficulty',
+                        style: TextStyle(
+                          color: Colors.white,
+                        ),
                       ),
-                    )
+                      TextButton(
+                        onPressed: () {
+                          context.read<MiniGameBloc>().add(ChangeDifficultyLevelEvent());
+                        },
+                        child: Text(
+                          _difficultyText(state.difficultyLevel),
+                          style: const TextStyle(
+                            color: Colors.orange,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                   const SizedBox(height: 10,),
-                  TextButton(
-                    onPressed: () {
-                      context.read<MiniGameBloc>().add(ChangeDifficultyLevelEvent());
-                    }, 
-                    child: Text("Change Difficulty : ${state.difficultyLevel}")
+                  const Text.rich(
+                    TextSpan(
+                      style: TextStyle(
+                        fontSize: 42
+                      ),
+                      children: <TextSpan> [
+                        TextSpan(
+                          text: "press"
+                        ),
+                        TextSpan(
+                          text: " space ",
+                          style: TextStyle(
+                            color: Colors.orange,
+                          )
+                        ),
+                        TextSpan(
+                          text: "to start"
+                        ),
+                      ]
+                    ),
                   ),
                   const SizedBox(height: 10,),
                   IconButton(
@@ -59,7 +87,7 @@ class PausePage extends StatelessWidget {
                       color: Colors.red,
                       size: 35,
                     )
-                  )
+                  ),
                 ],
               ),
             ),
@@ -67,5 +95,17 @@ class PausePage extends StatelessWidget {
         );
       },
     );
+  }
+  String _difficultyText(int difficultyLevel) {
+    switch (difficultyLevel) {
+      case 1:
+        return "easy";
+      case 2:
+        return "normal";
+      case 3:
+        return "hard";
+      default:
+        return "easy";
+    }
   }
 }

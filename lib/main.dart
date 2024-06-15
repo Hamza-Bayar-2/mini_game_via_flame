@@ -20,18 +20,18 @@ class MiniGameApp extends StatelessWidget {
     return MaterialApp(
       theme: ThemeData(
           textTheme: const TextTheme(
-              bodyMedium: TextStyle(color: Colors.white, fontSize: 30)),
+              bodyMedium: TextStyle(color: Colors.white, fontSize: 40, fontFamily: 'vinque')),
               textButtonTheme: TextButtonThemeData(
                 style: TextButton.styleFrom(
-                backgroundColor: Colors.blueAccent,
+                backgroundColor: Colors.black,
                 foregroundColor: Colors.white,
-                textStyle: const TextStyle(fontSize: 30,),
+                textStyle: const TextStyle(fontSize: 30, fontFamily: 'vinque'),
               )),
               iconButtonTheme: IconButtonThemeData(
                 style: IconButton.styleFrom(
                   foregroundColor: Colors.white,
                 iconSize: 24, 
-              ))
+              )),
               ),
       debugShowCheckedModeBanner: false,
       home: BlocProvider<MiniGameBloc>(

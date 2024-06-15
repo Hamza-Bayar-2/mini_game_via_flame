@@ -254,7 +254,7 @@ class ArcherPlayer extends SpriteAnimationGroupComponent with HasGameRef<MiniGam
     position.add(velocity * dt);
 
     // this keeps the archer inseade the screen
-    position.clamp(size - (size / 1.2), Vector2(gameRef.background.size.x, gameRef.background.size.y) - (size / 6));
+    position.clamp(Vector2(size.x - (size.x / 1.2), gameRef.background.size.y * 0.6 - size.y), Vector2(gameRef.background.size.x, gameRef.background.size.y) - (size / 6));
   }
  
   // this method is used to prevent repeating the same code
