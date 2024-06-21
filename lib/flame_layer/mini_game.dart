@@ -183,7 +183,7 @@ class MiniGame extends FlameGame with HasKeyboardHandlerComponents, TapCallbacks
         return Heart(animation: _heartAnimation(), anchor: Anchor.center, size: Vector2.all(background.size.y * heartScale));
       },
       period: heartSpawnPeriod,
-      area: Rectangle.fromLTWH(background.size.x / 12, background.size.y / 12, background.size.x * 0.8, background.size.y * 0.8),
+      area: Rectangle.fromLTWH(background.size.x / 12, background.size.y / 3, background.size.x * 0.8, background.size.y * 0.6),
     );
   }
 
