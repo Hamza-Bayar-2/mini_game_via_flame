@@ -50,13 +50,21 @@ class GamePage extends StatelessWidget {
                   ],
                 ),
               ) :
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text("health: ${state.archerHealth}"),
-                  const SizedBox(height: 20,),
-                  Text("kill: ${state.monsterKillNumber}"),
-                ],
+              Container(
+                padding: const EdgeInsets.all(30),
+                decoration: BoxDecoration(
+                  color: Colors.black.withOpacity(0.7),
+                  borderRadius: BorderRadius.circular(10)
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text("health: ${state.archerHealth}"),
+                    const SizedBox(height: 20,),
+                    Text("kill: ${state.monsterKillNumber}"),
+                  ],
+                ),
               )
             ],
           ),
