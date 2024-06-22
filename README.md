@@ -3,7 +3,15 @@ This game is a 2d mini game created by flame engine.
 
 - [Click to play the game](https://hamza-bayar-2.github.io/mini_game_via_flame/)
 
-<table>
+<table>  
+  <tr>
+    <td align="center" colspan="2">
+      <img src="/readmeAssets/mainPage.png" width="100%" height="100%">
+    </td>
+  </tr>
+  <tr>
+    <td colspan="2"><br></td>
+  </tr>
   <tr>
     <td align="center">
       <strong>Goblin Killing</strong><br>
