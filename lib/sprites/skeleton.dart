@@ -38,12 +38,13 @@ class Skeleton extends SpriteAnimationGroupComponent with HasGameRef<MiniGame>, 
   @override
   void update(double dt) { 
     
-    if(gameRef.miniGameBloc.state.isArcherDead || gameRef.miniGameBloc.state.isTheGameReset) {
+    if(gameRef.miniGameBloc.state.isArcherDead || gameRef.miniGameBloc.state.isTheGameReset || 
+    (gameRef.miniGameBloc.state.gameStage == 1 && gameRef.miniGameBloc.state.monsterKillNumber == 0)) {
       deactivate();
     }
 
     if(isVisible) {
-      if(isDying || (gameRef.miniGameBloc.state.gameMode == 0 && gameRef.miniGameBloc.state.gameStage != 4)) {
+      if(isDying) {
         _bloodParticles(dt);
         _skeletonDeath(dt);
       } else {
