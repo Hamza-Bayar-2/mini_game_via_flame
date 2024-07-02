@@ -11,6 +11,10 @@ import 'package:flutter/src/services/raw_keyboard.dart';
 import 'package:flutter/src/widgets/focus_manager.dart';
 import 'package:flutter/widgets.dart';
 import 'package:mini_game_via_flame/blocs/mini_game/mini_game_bloc.dart';
+import 'package:mini_game_via_flame/pattern%20implementation/enemy.dart';
+import 'package:mini_game_via_flame/pattern%20implementation/state_pattern/enemy_walking_state.dart';
+import 'package:mini_game_via_flame/pattern%20implementation/strategy_pattern/enemy_direction_left_strategy.dart';
+import 'package:mini_game_via_flame/pattern%20implementation/strategy_pattern/enemy_direction_right_strategy.dart';
 import 'package:mini_game_via_flame/pools/arrow_pool.dart';
 import 'package:mini_game_via_flame/pools/enemy_pool.dart';
 import 'package:mini_game_via_flame/sprites/archer.dart';
@@ -20,6 +24,8 @@ import 'package:mini_game_via_flame/sprites/goblin.dart';
 import 'package:flame/experimental.dart';
 import 'package:flame/input.dart';
 import 'package:mini_game_via_flame/sprites/heart.dart';
+
+import '../pools/new_enemy_pool.dart';
 
 class MiniGame extends FlameGame with HasKeyboardHandlerComponents, TapCallbacks, DragCallbacks, HasCollisionDetection, HasDecorator{
   final MiniGameBloc miniGameBloc;
@@ -48,8 +54,11 @@ class MiniGame extends FlameGame with HasKeyboardHandlerComponents, TapCallbacks
   final heartScale = 0.05;
   late final ArrowPool arrowPool;
   late final EnemyPool enemyPool;
+  late final NewEnemyPool newEnemyPool;
   late Arrow arrow;
   int streakKill = 0;
+  late Enemy swordMan;
+
 
   @override
   Future<void> onLoad() async{
@@ -62,6 +71,7 @@ class MiniGame extends FlameGame with HasKeyboardHandlerComponents, TapCallbacks
     enemySpawner2 = _enemySpawner(false, Vector2.all(background.size.y * monstersScale));
     arrowPool = ArrowPool();
     enemyPool = EnemyPool();
+    newEnemyPool = NewEnemyPool();
 
     world = World(children: [background, archerPlayer, heartSpawner, enemySpawner1, enemySpawner2, arrowPool, enemyPool]);
     await add(world); 
@@ -152,10 +162,12 @@ class MiniGame extends FlameGame with HasKeyboardHandlerComponents, TapCallbacks
 
   dynamic _enemyPickerForEnemyCreaterMethod(bool isSpawnRight, Vector2 enemySize) {
     if(miniGameBloc.state.gameStage == 1) {
-      print("goblin pool: ${enemyPool.getGoblinPool.length}");
-      final goblin = enemyPool.goblinAcquire(isSpawnRight, enemySize);
-      goblin.activate();
-      return goblin;
+      // print("goblin pool: ${enemyPool.getGoblinPool.length}");
+      // final goblin = enemyPool.goblinAcquire(isSpawnRight, enemySize);
+      // goblin.activate();
+      // return goblin;
+      final swordMan = newEnemyPool.swordManAcquire(isSpawnRight);
+      return swordMan;
     } else if(miniGameBloc.state.gameStage == 2) {
       print("mushroom pool: ${enemyPool.getMushroomPool.length}");
       final mushroom = enemyPool.mushroomAcquire(isSpawnRight, enemySize);
