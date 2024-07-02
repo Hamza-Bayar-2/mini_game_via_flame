@@ -90,10 +90,8 @@ class Enemy extends SpriteAnimationGroupComponent with HasGameRef<MiniGame>, Col
     if(gameRef.miniGameBloc.state.isArcherDead || gameRef.miniGameBloc.state.isTheGameReset) {
       deactivate();
     }
-
-    state.update(dt, this);
-    _swordManDeath(dt);
     _isTheEnemyWithinAttackRange();
+    state.update(dt, this);
     super.update(dt);
   }
 
@@ -135,19 +133,6 @@ class Enemy extends SpriteAnimationGroupComponent with HasGameRef<MiniGame>, Col
       attack();
     } else {
       walk();
-    }
-  }
-
-  void _swordManDeath(double dt) {
-    if(isDying == true) {
-      swordManHitbox.collisionType = CollisionType.inactive;
-      deathTimer.resume();
-      deathTimer.update(dt);
-      if(deathTimer.finished){
-        deactivate();
-        deathTimer.stop();
-        isDying = false;
-      }
     }
   }
 

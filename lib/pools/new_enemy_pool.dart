@@ -31,8 +31,10 @@ class NewEnemyPool extends Component with HasGameRef<MiniGame> {
 
     if(isSpawnRight && swordMan.isEnemyFacingRight) {
       swordMan.setDirectionStrategy(DirectionLeft());
+      swordMan.directionStrategy.direction(swordMan);
     } else if(!isSpawnRight && !swordMan.isEnemyFacingRight) {
       swordMan.setDirectionStrategy(DirectionRight());
+      swordMan.directionStrategy.direction(swordMan);
     }
 
     print(_swordManInactivePool.length);

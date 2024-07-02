@@ -25,6 +25,15 @@ class AttackingState implements EnemyState {
   
   @override
   void update(double dt, Enemy enemy) {
-
+    // _isTheEnemyWithinAttackRange(enemy);
   }
+
+  // void _isTheEnemyWithinAttackRange(Enemy enemy) {
+  //   if((enemy.gameRef.archerPlayer.position.x - enemy.position.x).abs() < 120
+  //   && (enemy.gameRef.archerPlayer.position.y - enemy.position.y).abs() < 60) {
+  //     enemy.attack();
+  //   } else {
+  //     enemy.walk();
+  //   }
+  // }
 }
