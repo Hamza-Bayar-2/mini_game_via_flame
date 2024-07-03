@@ -2,16 +2,16 @@ import 'dart:async';
 import 'package:flame/collisions.dart';
 import 'package:flame/components.dart';
 import 'package:mini_game_via_flame/flame_layer/mini_game.dart';
+import 'package:mini_game_via_flame/pattern%20implementation/state_pattern/enemy_attacking_state.dart';
+import 'package:mini_game_via_flame/pattern%20implementation/state_pattern/enemy_dead_state.dart';
 import 'package:mini_game_via_flame/pattern%20implementation/state_pattern/enemy_walking_state.dart';
-import 'package:mini_game_via_flame/pattern%20implementation/strategy_pattern/enemy_direction_strategy.dart';
-import 'package:mini_game_via_flame/sprites/arrow.dart';
 import 'state_pattern/enemy_state.dart';
 
 enum EnemyStateEnum {run, death, attack}
 
 class Enemy extends SpriteAnimationGroupComponent with HasGameRef<MiniGame>, CollisionCallbacks, HasVisibility{
-  EnemyState state;
-  DirectionStrategy directionStrategy;
+  EnemyState2 state2;
+  // DirectionStrategy directionStrategy;
   int enemySpeed;
   final String sourceFile;
   final Vector2 textureSize;
@@ -25,11 +25,12 @@ class Enemy extends SpriteAnimationGroupComponent with HasGameRef<MiniGame>, Col
   double stepTimeRun = 0.1;
   double stepTimeDeath = 0.1;
   double stepTimeAttack = 0.2;
+  bool isSpawnRight;
   late Timer deathTimer = Timer(stepTimeDeath * deathFrameAmount);
 
   Enemy({
-    required this.state,
-    required this.directionStrategy,
+    required this.state2,
+    // required this.directionStrategy,
     required this.enemySpeed,
     required Vector2 position,
     required Vector2 size,
@@ -37,31 +38,35 @@ class Enemy extends SpriteAnimationGroupComponent with HasGameRef<MiniGame>, Col
     required this.textureSize, 
     required this.runFrameAmount,
     required this.deathFrameAmount,
-    required this.attackFrameAmount
+    required this.attackFrameAmount,
+    required this.isSpawnRight
   }) : super(position: position, anchor: Anchor.center, size: size);
 
-  void changeState(EnemyState newState) {
-    state = newState;
+  void changeState(EnemyState2 newState) {
+    state2 = newState;
   }
 
-  void setDirectionStrategy(DirectionStrategy strategy) {
-    directionStrategy = strategy;
-  }
+  // void setDirectionStrategy(DirectionStrategy strategy) {
+  //   directionStrategy = strategy;
+  // }
 
   void walk() {
-    directionStrategy.direction(this);
-    state.walk(this);
+    changeState(WalkingState());
+    current = EnemyStateEnum.run;
   }
 
   void attack() {
-    directionStrategy.direction(this);
-    state.attack(this);
+    changeState(AttackingState());
+    current = EnemyStateEnum.attack;
   }
 
   void die() {  
-    directionStrategy.direction(this);
-    state.die(this);
+    changeState(DeadState());
+    current = EnemyStateEnum.death;
+    swordManHitbox.collisionType = CollisionType.inactive;
+    isDying = true;
   }
+  
 
   @override
   FutureOr<void> onLoad() {
@@ -79,7 +84,6 @@ class Enemy extends SpriteAnimationGroupComponent with HasGameRef<MiniGame>, Col
     )..debugMode = false;
 
     swordHitbox.collisionType = CollisionType.inactive;
-    swordManHitbox.collisionType = CollisionType.active;
     addAll({swordHitbox, swordManHitbox});
     _loadAnimation();
     return super.onLoad();
@@ -90,18 +94,21 @@ class Enemy extends SpriteAnimationGroupComponent with HasGameRef<MiniGame>, Col
     if(gameRef.miniGameBloc.state.isArcherDead || gameRef.miniGameBloc.state.isTheGameReset) {
       deactivate();
     }
-    _isTheEnemyWithinAttackRange();
-    state.update(dt, this);
+
+    state2.update(dt, this);
     super.update(dt);
   }
 
   @override
-  void onCollision(Set<Vector2> intersectionPoints, PositionComponent other) {
-    if(other is Arrow) {
-      isDying = true;
-      die();
-    }
-    super.onCollision(intersectionPoints, other);
+  void onCollisionStart(Set<Vector2> intersectionPoints, PositionComponent other) {
+    state2.handleCollision(this, other);
+    super.onCollisionStart(intersectionPoints, other);
+  }
+
+  @override
+  void onCollisionEnd(PositionComponent other) {
+    state2.handleCollisionEnd(this, other);
+    super.onCollisionEnd(other);
   }
 
   void _loadAnimation() {
@@ -127,27 +134,17 @@ class Enemy extends SpriteAnimationGroupComponent with HasGameRef<MiniGame>, Col
     );
   }
 
-  void _isTheEnemyWithinAttackRange() {
-    if((gameRef.archerPlayer.position.x - position.x).abs() < 120
-    && (gameRef.archerPlayer.position.y - position.y).abs() < 60) {
-      attack();
-    } else {
-      walk();
-    }
-  }
 
   void activate() {
     isVisible = true;
     swordManHitbox.collisionType = CollisionType.active;
-    changeState(WalkingState());
     walk();
-  } 
+  }
   
   void deactivate() {
     swordHitbox.collisionType = CollisionType.inactive;
     swordManHitbox.collisionType = CollisionType.inactive;
-    gameRef.newEnemyPool.addingSwordManToInactivePool(this);
+    gameRef.newEnemyPool.movingEnemyFromActiveToInactivePool(this);
     isVisible = false;
-    die();
   }
 }

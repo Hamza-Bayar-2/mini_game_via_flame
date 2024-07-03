@@ -1,30 +1,28 @@
 import 'package:flame/components.dart';
+import 'package:mini_game_via_flame/sprites/arrow.dart';
+import '../../sprites/archer.dart';
 import '../enemy.dart';
 import 'enemy_state.dart';
-import 'enemy_attacking_state.dart';
-import 'enemy_dead_state.dart';
 
-class WalkingState implements EnemyState {
+class WalkingState implements EnemyState2 {
+
   @override
-  void walk(Enemy enemy) {
-    enemy.current = EnemyStateEnum.run;
+  void handleCollision(Enemy enemy, PositionComponent other, ) {
+    if(other is Arrow) {
+      enemy.die();
+    } else if(other is ArcherPlayer) {
+      enemy.attack();
+    }
   }
 
   @override
-  void attack(Enemy enemy) {
-    enemy.changeState(AttackingState());
-    enemy.state.attack(enemy);
-  }
-
-  @override
-  void die(Enemy enemy) {
-    enemy.changeState(DeadState());
-    enemy.state.die(enemy);
+  void handleCollisionEnd(Enemy enemy, PositionComponent other, ) {
   }
 
   @override
   void update(double dt, Enemy enemy) {
     _enemyMovement(dt, enemy);
+    _enemyDirection(enemy);
   }
 
   void _enemyMovement(double dt, Enemy enemy) {
@@ -35,13 +33,27 @@ class WalkingState implements EnemyState {
 
     if(enemy.position.x > enemy.gameRef.background.size.x && enemy.isEnemyFacingRight && enemy.isVisible) {
       enemy.deactivate();
-      enemy.gameRef.newEnemyPool.addingSwordManToInactivePool(enemy);
     } else if(enemy.position.x < 0 && !enemy.isEnemyFacingRight && enemy.isVisible) {
       enemy.deactivate();
-      enemy.gameRef.newEnemyPool.addingSwordManToInactivePool(enemy);
     }
 
     velocity = Vector2(directionX, 0);
     enemy.position.add(velocity * dt);
+  }
+
+  void _enemyDirection(Enemy enemy) {
+    if(enemy.isSpawnRight && enemy.isEnemyFacingRight) {
+      if(enemy.enemySpeed > 0) {
+        enemy.enemySpeed *= -1;
+      }
+      enemy.flipHorizontallyAroundCenter();
+      enemy.isEnemyFacingRight = false;
+    } else if(!enemy.isSpawnRight && !enemy.isEnemyFacingRight) {
+      if(enemy.enemySpeed < 0) {
+        enemy.enemySpeed *= -1;
+      }
+      enemy.flipHorizontallyAroundCenter();
+      enemy.isEnemyFacingRight = true;
+    }
   }
 }

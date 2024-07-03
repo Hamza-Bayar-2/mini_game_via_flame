@@ -1,23 +1,17 @@
-import 'package:flame/collisions.dart';
+import 'package:flame/components.dart';
 import '../enemy.dart';
 import 'enemy_state.dart';
 
-class DeadState implements EnemyState {
+class DeadState implements EnemyState2{
+
   @override
-  void walk(Enemy enemy) {
-    // Can not walk while dead
+  void handleCollision(Enemy enemy, PositionComponent other) {
   }
 
   @override
-  void attack(Enemy enemy) {
-    // Can not attack while dead
+  void handleCollisionEnd(Enemy enemy, PositionComponent other, ) {
   }
 
-  @override
-  void die(Enemy enemy) {
-    enemy.current = EnemyStateEnum.death;
-  }
-  
   @override
   void update(double dt, Enemy enemy) {
     _swordManDeath(dt, enemy);
@@ -25,7 +19,6 @@ class DeadState implements EnemyState {
 
   void _swordManDeath(double dt, Enemy enemy) { 
     if(enemy.isDying == true) {
-      enemy.swordManHitbox.collisionType = CollisionType.inactive;
       enemy.deathTimer.resume();
       enemy.deathTimer.update(dt);
       if(enemy.deathTimer.finished){

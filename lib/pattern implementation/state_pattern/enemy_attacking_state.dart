@@ -1,39 +1,46 @@
+import 'package:flame/components.dart';
+import 'package:mini_game_via_flame/sprites/archer.dart';
+import '../../sprites/arrow.dart';
 import '../enemy.dart';
 import 'enemy_state.dart';
-import 'enemy_dead_state.dart';
-import 'enemy_walking_state.dart';
 
-class AttackingState implements EnemyState {
+class AttackingState implements EnemyState2{
   
-
   @override
-  void walk(Enemy enemy) {
-    enemy.changeState(WalkingState());
-    enemy.state.walk(enemy);
+  void handleCollision(Enemy enemy, PositionComponent other) {
+    if(other is Arrow) {
+      enemy.die();
+    } 
   }
 
   @override
-  void attack(Enemy enemy) {
-    enemy.current = EnemyStateEnum.attack;
+  void handleCollisionEnd(Enemy enemy, PositionComponent other) {
+    if(other is ArcherPlayer) {
+      enemy.walk();
+    }
   }
 
-  @override
-  void die(Enemy enemy) {
-    enemy.changeState(DeadState());
-    enemy.state.die(enemy);
-  }
-  
   @override
   void update(double dt, Enemy enemy) {
-    // _isTheEnemyWithinAttackRange(enemy);
+    _enemyAttackinSide(enemy);
   }
 
-  // void _isTheEnemyWithinAttackRange(Enemy enemy) {
-  //   if((enemy.gameRef.archerPlayer.position.x - enemy.position.x).abs() < 120
-  //   && (enemy.gameRef.archerPlayer.position.y - enemy.position.y).abs() < 60) {
-  //     enemy.attack();
-  //   } else {
-  //     enemy.walk();
-  //   }
-  // }
+  void _enemyAttackinSide(Enemy enemy) {
+    if(!enemy.isEnemyFacingRight && _isTheArcherOnTheRightOfTheEnemy(enemy)) {
+      enemy.flipHorizontallyAroundCenter();
+      enemy.isEnemyFacingRight = true;
+    } else if(enemy.isEnemyFacingRight && !_isTheArcherOnTheRightOfTheEnemy(enemy)) {
+      enemy.flipHorizontallyAroundCenter();
+      enemy.isEnemyFacingRight = false;
+    }
+  }
+
+  bool _isTheArcherOnTheRightOfTheEnemy(Enemy enemy) {
+    if(enemy.gameRef.archerPlayer.position.x - enemy.position.x > 0) {
+      return true;
+    } else {
+      return false;
+    }
+  }
+
 }
