@@ -102,9 +102,9 @@ class MiniGame extends FlameGame with HasKeyboardHandlerComponents, TapCallbacks
     _backgroundMusicManager();
     super.update(dt);
   }
-
+  
   @override
-  KeyEventResult onKeyEvent(RawKeyEvent event, Set<LogicalKeyboardKey> keysPressed) {
+  KeyEventResult onKeyEvent(KeyEvent event, Set<LogicalKeyboardKey> keysPressed) {
     // this is used to throw arrows
     // also space key is used to continuo the game if it was paused
     if(keysPressed.contains(LogicalKeyboardKey.space)) {

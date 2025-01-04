@@ -8,6 +8,7 @@ import 'package:flame/events.dart';
 import 'package:flame/rendering.dart';
 import 'package:flame_audio/bgm.dart';
 import 'package:flame_audio/flame_audio.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter/src/services/raw_keyboard.dart';
 import 'package:mini_game_via_flame/blocs/mini_game/mini_game_bloc.dart';
 import 'package:mini_game_via_flame/flame_layer/mini_game.dart';
@@ -80,7 +81,7 @@ class ArcherPlayer extends SpriteAnimationGroupComponent with HasGameRef<MiniGam
   }
 
   @override
-  bool onKeyEvent(RawKeyEvent event, Set<LogicalKeyboardKey> keysPressed) {
+  bool onKeyEvent(KeyEvent event, Set<LogicalKeyboardKey> keysPressed) {
     final isUpKeyPressed = keysPressed.contains(LogicalKeyboardKey.arrowUp) || 
     keysPressed.contains(LogicalKeyboardKey.keyW);
     final isDownKeyPressed = keysPressed.contains(LogicalKeyboardKey.arrowDown) || 
