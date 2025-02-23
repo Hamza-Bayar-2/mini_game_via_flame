@@ -159,12 +159,12 @@ class MiniGame extends FlameGame with HasKeyboardHandlerComponents, TapCallbacks
 
   dynamic _enemyPickerForEnemyCreaterMethod(bool isSpawnRight, Vector2 enemySize) {
     if(miniGameBloc.state.gameStage == 1) {
-      // print("goblin pool: ${enemyPool.getGoblinPool.length}");
-      // final goblin = enemyPool.goblinAcquire(isSpawnRight, enemySize);
-      // goblin.activate();
-      // return goblin;
-      final swordMan = newEnemyPool.swordManAcquire(isSpawnRight);
-      return swordMan;
+      print("goblin pool: ${enemyPool.getGoblinPool.length}");
+      final goblin = enemyPool.goblinAcquire(isSpawnRight, enemySize);
+      goblin.activate();
+      return goblin;
+      // final swordMan = newEnemyPool.swordManAcquire(isSpawnRight);
+      // return swordMan;
     } else if(miniGameBloc.state.gameStage == 2) {
       print("mushroom pool: ${enemyPool.getMushroomPool.length}");
       final mushroom = enemyPool.mushroomAcquire(isSpawnRight, enemySize);
