@@ -3,6 +3,10 @@ This game is a 2d mini game created by flame engine.
 
 - [Click to play the game](https://hamza-bayar-2.github.io/the_hunter/)
 
+## Tanıtım Videosu
+[![The Hunter Tanıtım Videosu](https://img.youtube.com/vi/sgUAZC2lTYw/0.jpg)](https://youtu.be/sgUAZC2lTYw)
+
+## Oyun Görselleri
 <table>  
   <tr>
     <td align="center" colspan="2">
