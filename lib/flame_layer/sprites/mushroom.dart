@@ -25,6 +25,9 @@ class Mushroom extends SpriteAnimationGroupComponent
   double mushroomSpeed = 170;
   bool isMushroomFacingRight = true;
   bool isDying = false;
+  final int _sliceSize = 30;
+  int _currentSlice = 0;
+  Vector2 _currentVelocity = Vector2.zero();
   final Timer mushroomDeathTimer = Timer(0.39);
   final Timer bloodTimer = Timer(0.1);
   late final rectangleHitbox = RectangleHitbox.relative(
@@ -117,60 +120,67 @@ class Mushroom extends SpriteAnimationGroupComponent
   }
 
   void _mushroomMovement(double dt) {
-    Vector2 velocity = Vector2.zero();
+    if (isMushroomFollowsTheArhcer) {
+      _currentSlice++;
+      if (_currentSlice >= _sliceSize) {
+        _currentSlice = 0;
+        _calculateVelocity();
+      }
+    } else {
+      _calculateVelocity();
+    }
+
+    if (_currentVelocity.x < 0 && isMushroomFacingRight) {
+      flipHorizontallyAroundCenter();
+      isMushroomFacingRight = false;
+    } else if (_currentVelocity.x > 0 && !isMushroomFacingRight) {
+      flipHorizontallyAroundCenter();
+      isMushroomFacingRight = true;
+    }
+
+    current = MushroomState.run;
+    position.add(_currentVelocity * dt);
+
+    if (isSpawnRight && position.x < 0) {
+      deactivate();
+      position = Vector2(game.background.size.x, 0);
+    } else if (!isSpawnRight && position.x > game.background.size.x) {
+      deactivate();
+      position = Vector2(0, 0);
+    }
+  }
+
+  void _calculateVelocity() {
     double directionX = 0.0;
     double directionY = 0.0;
 
     if (isSpawnRight) {
-      if (isMushroomFacingRight) {
-        flipHorizontallyAroundCenter();
-        isMushroomFacingRight = false;
-      }
-      current = MushroomState.run;
-
       if (isMushroomFollowsTheArhcer &&
           game.playerComponent.position.x < position.x) {
         directionX -= mushroomHypotenuseSpeed;
-        if (game.playerComponent.position.y < position.y) {
+        if (game.playerComponent.position.y + 25 < position.y) {
           directionY -= mushroomHypotenuseSpeed;
-        } else {
+        } else if (game.playerComponent.position.y - 25 > position.y) {
           directionY += mushroomHypotenuseSpeed;
         }
       } else {
         directionX -= mushroomSpeed;
       }
-
-      if (position.x < 0) {
-        deactivate();
-        position = Vector2(game.background.size.x, 0);
-      }
     } else {
-      if (!isMushroomFacingRight) {
-        flipHorizontallyAroundCenter();
-        isMushroomFacingRight = true;
-      }
-      current = MushroomState.run;
-
       if (isMushroomFollowsTheArhcer &&
           game.playerComponent.position.x > position.x) {
         directionX += mushroomHypotenuseSpeed;
-        if (game.playerComponent.position.y < position.y) {
+        if (game.playerComponent.position.y + 50 < position.y) {
           directionY -= mushroomHypotenuseSpeed;
-        } else {
+        } else if (game.playerComponent.position.y - 50 > position.y) {
           directionY += mushroomHypotenuseSpeed;
         }
       } else {
         directionX += mushroomSpeed;
       }
-
-      if (position.x > game.background.size.x) {
-        deactivate();
-        position = Vector2(0, 0);
-      }
     }
 
-    velocity = Vector2(directionX, directionY);
-    position.add(velocity * dt);
+    _currentVelocity = Vector2(directionX, directionY);
   }
 
   void _bloodParticles(double dt) {
